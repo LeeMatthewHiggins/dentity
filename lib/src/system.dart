@@ -1,17 +1,14 @@
 import 'package:dentity/dentity.dart';
 
 abstract class System {
+  final Archetype archetype;
+  final EntityManager entityManager;
   Set<Type> get filterTypes;
-  Archetype get archetype =>
-      componentManager.getArchetypeForComponentTypes(filterTypes);
-  final ReadonlyComponentManager _componentManager;
-  ReadonlyComponentManager get componentManager => _componentManager;
 
-  System(ReadonlyComponentManager componentManager)
-      : _componentManager = componentManager;
+  System(this.entityManager, this.archetype);
 
   void process() {
-    for (var entity in componentManager.getEntitiesForArchetype(archetype)) {
+    for (var entity in entityManager.getEntitiesForArchetype(archetype)) {
       processEntity(entity);
     }
   }

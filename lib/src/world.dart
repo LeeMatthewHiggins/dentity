@@ -9,6 +9,12 @@ class World {
     this._systems,
   );
 
+  void process() {
+    for (var system in _systems) {
+      system.process();
+    }
+  }
+
   int createEntity(Iterable<Component> components) {
     return _entityManager.createEntity(components);
   }
@@ -17,13 +23,15 @@ class World {
     return _entityManager.getComponent<T>(entity);
   }
 
-  void removeEntity(Entity entity) {
-    _entityManager.removeEntity(entity);
+  void addComponents(Entity entity, Iterable<Component> components) {
+    _entityManager.addComponents(entity, components);
   }
 
-  void process() {
-    for (var system in _systems) {
-      system.process();
-    }
+  void removeComponents(Entity entity, Iterable<Type> componentTypes) {
+    _entityManager.removeComponents(entity, componentTypes);
+  }
+
+  void removeEntity(Entity entity) {
+    _entityManager.removeEntity(entity);
   }
 }

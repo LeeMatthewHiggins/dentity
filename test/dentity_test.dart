@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dentity/dentity.dart';
 import 'package:test/test.dart';
 
@@ -20,14 +22,14 @@ class OtherComponent extends Component {
 }
 
 class MovementSystem extends System {
-  MovementSystem(super.componentManager);
+  MovementSystem(super.entityManager, super.archetype);
   @override
   Set<Type> get filterTypes => const {Position, Velocity};
 
   @override
   void processEntity(Entity entity) {
-    var position = componentManager.getComponent<Position>(entity)!;
-    var velocity = componentManager.getComponent<Velocity>(entity)!;
+    var position = entityManager.getComponent<Position>(entity)!;
+    var velocity = entityManager.getComponent<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }
@@ -45,9 +47,15 @@ ComponentManager _createComponentManager() {
 
 World _createWorld() {
   final componentManager = _createComponentManager();
-  final movementSystem = MovementSystem(componentManager);
+  final entityManager = EntityManager(componentManager);
+  final movementSystem = MovementSystem(
+    entityManager,
+    componentManager.getArchetypeForComponentTypes(
+      {Position, Velocity},
+    ),
+  );
   return World(
-    EntityManager(componentManager),
+    entityManager,
     [movementSystem],
   );
 }
@@ -180,6 +188,21 @@ void main() {
         expect(recycledPositionOnly, equals(positionOnly));
         final newPositionOnly = world.createEntity([Position(0, 0)]);
         expect(newPositionOnly, isNot(recycledPositionOnly));
+      });
+
+      test('test mutation of entity', () {
+        final world = _createWorld();
+        final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
+        final entity2 = world.createEntity({Position(0, 0), Velocity(1, 1)});
+        world.removeComponents(entity1, {Position});
+        world.addComponents(entity2, {OtherComponent()});
+        final position = world.getComponent<Position>(entity1);
+        expect(position, isNull);
+        final velocity = world.getComponent<Velocity>(entity1);
+        expect(velocity, isNotNull);
+
+        final otherComponent = world.getComponent<OtherComponent>(entity2);
+        expect(otherComponent, isNotNull);
       });
     },
   );
