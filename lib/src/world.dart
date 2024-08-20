@@ -35,7 +35,7 @@ class World {
     _entityManager.removeComponents(entity, componentTypes);
   }
 
-  void removeEntity(Entity entity) {
-    _entityManager.removeEntity(entity);
+  void destroyEntity(Entity entity) {
+    _entityManager.destroyEntity(entity);
   }
 }

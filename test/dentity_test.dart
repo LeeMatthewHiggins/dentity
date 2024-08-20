@@ -161,7 +161,7 @@ void main() {
           final entity = world.createEntity([Position(0, 0), Velocity(1, 1)]);
           world.process();
 
-          world.removeEntity(entity);
+          world.destroyEntity(entity);
           world.process();
 
           // Ensure the entity is removed
@@ -175,8 +175,8 @@ void main() {
         world.createEntity([Position(0, 0), Velocity(1, 1)]);
         final positionOnly = world.createEntity([Position(0, 0)]);
         final entity2 = world.createEntity([Position(0, 0), Velocity(1, 1)]);
-        world.removeEntity(positionOnly);
-        world.removeEntity(entity2);
+        world.destroyEntity(positionOnly);
+        world.destroyEntity(entity2);
         final recycledPositionOnly = world.createEntity([Position(0, 0)]);
         expect(recycledPositionOnly, equals(positionOnly));
         final newPositionOnly = world.createEntity([Position(0, 0)]);
@@ -237,7 +237,7 @@ void main() {
 
       final sw = Stopwatch()..start();
       for (var i = 0; i < runTimes; i++) {
-        world.removeEntity(entities[i]);
+        world.destroyEntity(entities[i]);
       }
       sw.stop();
       print('Removal Benchmark took ${sw.elapsedMilliseconds}ms');

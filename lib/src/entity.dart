@@ -40,7 +40,11 @@ class EntityManager {
     return _newEntity++;
   }
 
-  void removeEntity(Entity entity) {
+  bool hasEntity(Entity entity) {
+    return _entityByArchetype.containsKey(entity);
+  }
+
+  void destroyEntity(Entity entity) {
     final archetype = getArchetype(entity);
     if (archetype == null) {
       return;

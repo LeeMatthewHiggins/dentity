@@ -7,16 +7,15 @@ class ArchetypeManager {
     var bitIndex = 0;
     for (var componentType in types) {
       _componentTypeToBitIndex[componentType] = bitIndex++;
-      assert(bitIndex < 64, 'Too many component types, rethink your life');
     }
   }
 
   Archetype getArchetype(Iterable<Type> componentTypes) {
-    Archetype bitset = Archetype.zero;
+    Archetype bitset = BigInt.zero;
     for (var componentType in componentTypes) {
       var bitIndex = _componentTypeToBitIndex[componentType];
       if (bitIndex != null) {
-        bitset |= Archetype.one << bitIndex;
+        bitset |= BigInt.one << bitIndex;
       }
     }
     return bitset;
@@ -27,7 +26,7 @@ class ArchetypeManager {
     for (var componentType in _componentTypeToBitIndex.keys) {
       var bitIndex = _componentTypeToBitIndex[componentType];
       if (bitIndex != null &&
-          (archetype & (Archetype.one << bitIndex)) != BigInt.zero) {
+          (archetype & (BigInt.one << bitIndex)) != BigInt.zero) {
         componentTypes.add(componentType);
       }
     }
