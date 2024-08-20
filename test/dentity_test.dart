@@ -26,8 +26,8 @@ class MovementSystem extends System {
 
   @override
   void processEntity(Entity entity) {
-    var position = entityManager.getComponent<Position>(entity)!;
-    var velocity = entityManager.getComponent<Velocity>(entity)!;
+    var position = view.getComponent<Position>(entity)!;
+    var velocity = view.getComponent<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }
@@ -210,6 +210,7 @@ void main() {
       }
       sw.stop();
       print('Creation benchmark took ${sw.elapsedMilliseconds}ms');
+      expect(sw.elapsedMilliseconds, lessThan(10));
     });
 
     test('Processing', () {
@@ -224,6 +225,7 @@ void main() {
       }
       sw.stop();
       print('Processing Benchmark took ${sw.elapsedMilliseconds}ms');
+      expect(sw.elapsedMilliseconds, lessThan(50));
     });
 
     test('Removal', () {
@@ -239,6 +241,7 @@ void main() {
       }
       sw.stop();
       print('Removal Benchmark took ${sw.elapsedMilliseconds}ms');
+      expect(sw.elapsedMilliseconds, lessThan(10));
     });
   });
 }

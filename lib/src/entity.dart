@@ -83,7 +83,7 @@ class EntityManager {
     return _entityByArchetype[entity];
   }
 
-  Iterable<Entity> getEntitiesForArchetype(Archetype archetype) {
+  Iterable<Entity> _getEntitiesForArchetype(Archetype archetype) {
     return _entitiesByArchetype[archetype] ?? {};
   }
 
@@ -97,14 +97,14 @@ class EntityManager {
   }
 }
 
-class View {
+class EntityView implements Iterable<Entity> {
   final EntityManager entityManager;
   final Archetype archetype;
 
-  View(this.entityManager, this.archetype);
+  EntityView(this.entityManager, this.archetype);
 
-  Iterable<Entity> get entities =>
-      entityManager.getEntitiesForArchetype(archetype);
+  Iterable<Entity> get _entities =>
+      entityManager._getEntitiesForArchetype(archetype);
 
   T? getComponent<T extends Component>(Entity entity) {
     return entityManager.getComponent<T>(entity);
@@ -114,11 +114,114 @@ class View {
     entityManager.addComponents(entity, components);
   }
 
-  void removeComponents(Entity entity, Iterable<Type> componentTypes) {
-    entityManager.removeComponents(entity, componentTypes);
-  }
+  @override
+  Iterator<Entity> get iterator => _entities.iterator;
 
-  void removeEntity(Entity entity) {
-    entityManager.removeEntity(entity);
+  @override
+  int get length => _entities.length;
+
+  @override
+  bool any(bool Function(Entity entity) test) => _entities.any(test);
+
+  @override
+  bool contains(Object? element) => _entities.contains(element);
+
+  @override
+  Entity elementAt(int index) => _entities.elementAt(index);
+
+  @override
+  bool every(bool Function(Entity entity) test) => _entities.every(test);
+
+  @override
+  Iterable<R> expand<R>(Iterable<R> Function(Entity entity) toElements) =>
+      _entities.expand(toElements);
+
+  @override
+  Entity get first => _entities.first;
+
+  @override
+  Entity firstWhere(bool Function(Entity entity) test,
+          {Entity Function()? orElse}) =>
+      _entities.firstWhere(test, orElse: orElse);
+
+  @override
+  T fold<T>(
+          T initialValue, T Function(T previousValue, Entity entity) combine) =>
+      _entities.fold(initialValue, combine);
+
+  @override
+  Iterable<Entity> followedBy(Iterable<Entity> other) =>
+      _entities.followedBy(other);
+
+  @override
+  void forEach(void Function(Entity entity) f) => _entities.forEach(f);
+
+  @override
+  Iterable<Entity> cast<Entity>() => _entities.cast<Entity>();
+
+  @override
+  Entity get last => _entities.last;
+
+  @override
+  Entity lastWhere(bool Function(Entity entity) test,
+          {Entity Function()? orElse}) =>
+      _entities.lastWhere(test, orElse: orElse);
+
+  @override
+  Iterable<R> map<R>(R Function(Entity entity) f) => _entities.map(f);
+
+  @override
+  Entity reduce(Entity Function(Entity value, Entity element) combine) =>
+      _entities.reduce(combine);
+
+  @override
+  Iterable<Entity> skip(int count) => _entities.skip(count);
+
+  @override
+  Iterable<Entity> skipWhile(bool Function(Entity value) test) =>
+      _entities.skipWhile(test);
+
+  @override
+  Iterable<Entity> take(int count) => _entities.take(count);
+
+  @override
+  Iterable<Entity> takeWhile(bool Function(Entity value) test) =>
+      _entities.takeWhile(test);
+
+  @override
+  List<Entity> toList({bool growable = true}) =>
+      _entities.toList(growable: growable);
+
+  @override
+  Set<Entity> toSet() => _entities.toSet();
+
+  @override
+  Iterable<Entity> where(bool Function(Entity entity) test) =>
+      _entities.where(test);
+
+  @override
+  Iterable<T> whereType<T>() => _entities.whereType<T>();
+
+  @override
+  String join([String separator = '']) => _entities.join(separator);
+
+  @override
+  bool get isEmpty => _entities.isEmpty;
+
+  @override
+  bool get isNotEmpty => _entities.isNotEmpty;
+
+  @override
+  Entity get single => _entities.single;
+
+  @override
+  Entity singleWhere(bool Function(Entity element) test,
+          {Entity Function()? orElse}) =>
+      _entities.singleWhere(test, orElse: orElse);
+}
+
+extension EntityViewConvenience on EntityManager {
+  EntityView view(Archetype archetype) {
+    return EntityView(this, archetype);
   }
 }
