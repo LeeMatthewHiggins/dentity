@@ -1,70 +1,54 @@
+import 'package:dentity/src/archetype.dart';
 import 'package:dentity/src/entity.dart';
 import 'package:dentity/src/sparse_array.dart';
 
 typedef Component = Object;
 
-typedef Archetype = BigInt;
+abstract class ComponentsInterface {
+  T? getComponent<T extends Component>(Entity entity);
+  Component? getComponentByType(Type componentType, Entity entity);
+  Iterable<Type> get componentTypes;
+  bool hasComponent(Entity entity, Type type);
+}
 
-class ReadonlyComponentManager {
+class ReadonlyComponentManager implements ComponentsInterface {
   final Map<Type, SparseArray<Component>> _componentArrays = {};
-  final Map<Type, int> _componentTypeToBitIndex = {};
+  //final Map<Type, int> _componentTypeToBitIndex = {};
   ReadonlyComponentManager();
 
+  @override
   T? getComponent<T extends Component>(Entity entity) {
     var componentType = T;
     return getComponentByType(componentType, entity) as T?;
   }
 
+  @override
   Component? getComponentByType(Type componentType, Entity entity) {
     var componentArray = _componentArrays[componentType];
     return componentArray?[entity];
   }
 
+  @override
   Iterable<Type> get componentTypes => _componentArrays.keys;
 
+  @override
   bool hasComponent(Entity entity, Type type) {
     return _componentArrays[type]?[entity] != null;
   }
-
-  Archetype getArchetypeForComponentTypes(Iterable<Type> componentTypes) {
-    Archetype bitset = Archetype.zero;
-    for (var componentType in componentTypes) {
-      var bitIndex = _componentTypeToBitIndex[componentType];
-      if (bitIndex != null) {
-        bitset |= Archetype.one << bitIndex;
-      }
-    }
-    return bitset;
-  }
-
-  Iterable<Type> getComponentTypesForArchetype(Archetype archetype) {
-    var componentTypes = <Type>[];
-    for (var componentType in _componentTypeToBitIndex.keys) {
-      var bitIndex = _componentTypeToBitIndex[componentType];
-      if (bitIndex != null &&
-          (archetype & (Archetype.one << bitIndex)) != BigInt.zero) {
-        componentTypes.add(componentType);
-      }
-    }
-    return componentTypes;
-  }
 }
 
-typedef ComponentArrayFactory = SparseArray<Component> Function(Type);
+typedef ComponentArrayFactory = SparseArray<Component> Function();
 
 class ComponentManager extends ReadonlyComponentManager {
   late final Map<Type, ComponentArrayFactory> _componentArrayFactories;
+  late ArchetypeManager _archetypeManager;
+  ArchetypeManager get archetypeManager => _archetypeManager;
 
   ComponentManager({
     Map<Type, ComponentArrayFactory> componentArrayFactories = const {},
   }) {
     _componentArrayFactories = componentArrayFactories;
-    var bitIndex = 0;
-    for (var componentType in _componentArrayFactories.keys) {
-      _componentArrays[componentType] =
-          _componentArrayFactories[componentType]!(componentType);
-      _componentTypeToBitIndex[componentType] = bitIndex++;
-    }
+    _archetypeManager = ArchetypeManager(_componentArrayFactories.keys);
   }
 
   void addComponents(Entity entity, Iterable<Component> components) {
@@ -77,7 +61,7 @@ class ComponentManager extends ReadonlyComponentManager {
       var componentType = component.runtimeType;
       _componentArrays.putIfAbsent(
         componentType,
-        () => factory!(componentType),
+        () => factory!(),
       )[entity] = component;
     }
   }

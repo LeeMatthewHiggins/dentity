@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:dentity/dentity.dart';
 import 'package:test/test.dart';
 
@@ -22,7 +20,7 @@ class OtherComponent extends Component {
 }
 
 class MovementSystem extends System {
-  MovementSystem(super.entityManager, super.archetype);
+  MovementSystem();
   @override
   Set<Type> get filterTypes => const {Position, Velocity};
 
@@ -38,9 +36,9 @@ class MovementSystem extends System {
 ComponentManager _createComponentManager() {
   return ComponentManager(
     componentArrayFactories: {
-      Position: (type) => SimpleSparseArray<Position>(),
-      Velocity: (type) => SimpleSparseArray<Velocity>(),
-      OtherComponent: (type) => SimpleSparseArray<OtherComponent>(),
+      Position: () => SimpleSparseArray<Position>(),
+      Velocity: () => SimpleSparseArray<Velocity>(),
+      OtherComponent: () => SimpleSparseArray<OtherComponent>(),
     },
   );
 }
@@ -48,12 +46,7 @@ ComponentManager _createComponentManager() {
 World _createWorld() {
   final componentManager = _createComponentManager();
   final entityManager = EntityManager(componentManager);
-  final movementSystem = MovementSystem(
-    entityManager,
-    componentManager.getArchetypeForComponentTypes(
-      {Position, Velocity},
-    ),
-  );
+  final movementSystem = MovementSystem();
   return World(
     entityManager,
     [movementSystem],

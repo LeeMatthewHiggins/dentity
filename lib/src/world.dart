@@ -7,7 +7,11 @@ class World {
   World(
     this._entityManager,
     this._systems,
-  );
+  ) {
+    for (var system in _systems) {
+      system.attach(_entityManager);
+    }
+  }
 
   void process() {
     for (var system in _systems) {

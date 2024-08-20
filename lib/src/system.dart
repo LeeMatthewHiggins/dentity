@@ -1,11 +1,17 @@
 import 'package:dentity/dentity.dart';
+import 'package:dentity/src/archetype.dart';
 
 abstract class System {
-  final Archetype archetype;
-  final EntityManager entityManager;
+  late final Archetype archetype;
+  late final EntityManager entityManager;
+  late final ArchetypeManager archetypeManager;
   Set<Type> get filterTypes;
 
-  System(this.entityManager, this.archetype);
+  void attach(EntityManager entityManager) {
+    this.entityManager = entityManager;
+    archetype = entityManager.componentManager.archetypeManager
+        .getArchetype(filterTypes);
+  }
 
   void process() {
     for (var entity in entityManager.getEntitiesForArchetype(archetype)) {
