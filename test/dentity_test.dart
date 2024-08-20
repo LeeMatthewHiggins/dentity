@@ -141,9 +141,28 @@ void main() {
         expect(position, isNull);
         final velocity = world.getComponent<Velocity>(entity1);
         expect(velocity, isNotNull);
-
         final otherComponent = world.getComponent<OtherComponent>(entity2);
         expect(otherComponent, isNotNull);
+      });
+
+      test('test view is updates correctly', () {
+        final world = createBasicExampleWorld();
+        final entity1 = world.createEntity({Position(0, 0), Velocity(10, 10)});
+        final entity2 = world.createEntity({Position(1, 1), Velocity(20, 20)});
+        final view = world.viewForTypes({Position, Velocity});
+        world.process();
+
+        final entity3 = world.createEntity({Position(2, 2), Velocity(30, 30)});
+        final position1 = view.getComponent<Position>(entity1);
+        expect(position1!.x, 10);
+        expect(position1.y, 10);
+        final position2 = view.getComponent<Position>(entity2);
+        expect(position2!.x, 21);
+        expect(position2.y, 21);
+
+        final position3 = view.getComponent<Position>(entity3);
+        expect(position3!.x, 2);
+        expect(position3.y, 2);
       });
     },
   );

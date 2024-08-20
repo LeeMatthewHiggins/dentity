@@ -107,11 +107,28 @@ class EntityView implements Iterable<Entity> {
           archetype,
         );
 
+  factory EntityView.fromTypes(
+    EntityManager entityManager,
+    Set<Type> componentTypes,
+  ) {
+    final archetype = entityManager.componentManager.archetypeManager
+        .getArchetype(componentTypes);
+    return EntityView(entityManager, archetype);
+  }
+
   Iterable<Entity> get _entities =>
       _entityManager._getEntitiesForArchetype(archetype);
 
   SparseList<Component>? getComponentArray(Type type) {
     return _componentArrays[type];
+  }
+
+  Component? getComponentForType(Type type, Entity entity) {
+    return _componentArrays[type]?[entity];
+  }
+
+  T? getComponent<T>(Entity entity) {
+    return _componentArrays[T]?[entity] as T?;
   }
 
   @override
@@ -220,8 +237,12 @@ class EntityView implements Iterable<Entity> {
       _entities.singleWhere(test, orElse: orElse);
 }
 
-extension EntityViewConvenience on EntityManager {
+extension EntityViewOnEntityManager on EntityManager {
   EntityView view(Archetype archetype) {
     return EntityView(this, archetype);
+  }
+
+  EntityView viewForTypes(Set<Type> types) {
+    return EntityView.fromTypes(this, types);
   }
 }

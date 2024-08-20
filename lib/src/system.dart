@@ -7,9 +7,7 @@ abstract class System {
   Set<Type> get filterTypes;
 
   void attach(EntityManager entityManager) {
-    final archetypeManager = entityManager.componentManager.archetypeManager;
-    final archetype = archetypeManager.getArchetype(filterTypes);
-    view = entityManager.view(archetype);
+    view = entityManager.viewForTypes(filterTypes);
     componentManager = entityManager.componentManager;
     this.entityManager = entityManager;
   }

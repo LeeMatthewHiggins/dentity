@@ -41,3 +41,13 @@ class World {
     _entityManager.destroyEntity(entity);
   }
 }
+
+extension EntityViewOnWorld on World {
+  EntityView view(Archetype archetype) {
+    return EntityView(_entityManager, archetype);
+  }
+
+  EntityView viewForTypes(Set<Type> types) {
+    return EntityView.fromTypes(_entityManager, types);
+  }
+}
