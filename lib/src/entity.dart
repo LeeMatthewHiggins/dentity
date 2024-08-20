@@ -81,10 +81,6 @@ class EntityManager {
     return _entityByArchetype[entity];
   }
 
-  Iterable<Entity> _getEntitiesWithExactArchetypeMatch(Archetype archetype) {
-    return _entitiesByArchetype[archetype] ?? {};
-  }
-
   Iterable<Entity> _getEntitiesMatchingSubArchetypes(Archetype archetype) {
     return _entitiesByArchetype.entries
         .where((e) => (e.key & archetype) == archetype)

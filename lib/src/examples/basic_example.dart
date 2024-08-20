@@ -55,6 +55,7 @@ ComponentManager _createContiguousComponentManager() {
   );
 }
 
+// ignore: unused_element
 World _createSimpleWorld() {
   final componentManager = _createSimpleComponentManager();
   final entityManager = EntityManager(componentManager);
@@ -78,5 +79,5 @@ World _createContiguousWorld() {
 }
 
 World createBasicExampleWorld() {
-  return _createContiguousWorld();
+  return _createContiguousWorld(); //LH we can switch to _createSimpleWorld if we want to use SimpleSparseList
 }
