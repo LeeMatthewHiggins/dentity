@@ -81,8 +81,14 @@ class EntityManager {
     return _entityByArchetype[entity];
   }
 
-  Iterable<Entity> _getEntitiesForArchetype(Archetype archetype) {
+  Iterable<Entity> _getEntitiesWithExactArchetypeMatch(Archetype archetype) {
     return _entitiesByArchetype[archetype] ?? {};
+  }
+
+  Iterable<Entity> _getEntitiesMatchingSubArchetypes(Archetype archetype) {
+    return _entitiesByArchetype.entries
+        .where((e) => (e.key & archetype) == archetype)
+        .expand((e) => e.value);
   }
 
   void _updateAchetype(Entity entity, Archetype newArhcetype) {
@@ -117,7 +123,7 @@ class EntityView implements Iterable<Entity> {
   }
 
   Iterable<Entity> get _entities =>
-      _entityManager._getEntitiesForArchetype(archetype);
+      _entityManager._getEntitiesMatchingSubArchetypes(archetype);
 
   SparseList<Component>? getComponentArray(Type type) {
     return _componentArrays[type];

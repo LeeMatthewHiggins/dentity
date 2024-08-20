@@ -107,10 +107,7 @@ class ComponentManager implements ComponentsInterface {
       assert(factory != null,
           'No factory found for component type ${component.runtimeType}');
       var componentType = component.runtimeType;
-      _componentArrays.putIfAbsent(
-        componentType,
-        () => factory!(),
-      )[entity] = component;
+      _componentArrays[componentType]![entity] = component;
     }
   }
 

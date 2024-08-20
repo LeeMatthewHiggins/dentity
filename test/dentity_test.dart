@@ -164,6 +164,37 @@ void main() {
         expect(position3!.x, 2);
         expect(position3.y, 2);
       });
+
+      test('test view filters correctly', () {
+        final world = createBasicExampleWorld();
+        final entity1 = world.createEntity({Position(0, 0), Velocity(10, 10)});
+        final entity2 = world
+            .createEntity({Position(1, 1), Velocity(20, 20), OtherComponent()});
+        final entity3 = world.createEntity({Position(2, 2), Velocity(30, 30)});
+        final entity4 = world.createEntity({Velocity(0, 0)});
+        final entity5 = world.createEntity({OtherComponent()});
+        final positionView = world.viewForTypes({Position});
+        final positionVelocityView = world.viewForTypes({Position, Velocity});
+
+        expect(positionView, contains(entity1));
+        expect(positionView, contains(entity2));
+        expect(positionView, contains(entity3));
+        expect(positionView, isNot(contains(entity4)));
+        expect(positionView, isNot(contains(entity5)));
+
+        expect(positionVelocityView, contains(entity1));
+        expect(positionVelocityView, contains(entity2));
+        expect(positionVelocityView, contains(entity3));
+        expect(positionVelocityView, isNot(contains(entity4)));
+        expect(positionVelocityView, isNot(contains(entity5)));
+
+        final position1 = positionView.getComponent<Position>(entity1);
+        expect(position1!.x, 0);
+        expect(position1.y, 0);
+        final position2 = positionView.getComponent<Position>(entity2);
+        expect(position2!.x, 1);
+        expect(position2.y, 1);
+      });
     },
   );
 
