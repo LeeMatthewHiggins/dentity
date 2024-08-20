@@ -96,19 +96,19 @@ class EntityManager {
 }
 
 class EntityView implements Iterable<Entity> {
-  final EntityManager entityManager;
+  final EntityManager _entityManager;
   final Archetype archetype;
   final Map<Type, SparseList<Component>> _componentArrays;
   Map<Type, SparseList<Component>> get componentArrays => _componentArrays;
 
-  EntityView(this.entityManager, this.archetype)
+  EntityView(this._entityManager, this.archetype)
       : _componentArrays =
-            entityManager.componentManager.componentsForArchetype(
+            _entityManager.componentManager.componentsForArchetype(
           archetype,
         );
 
   Iterable<Entity> get _entities =>
-      entityManager._getEntitiesForArchetype(archetype);
+      _entityManager._getEntitiesForArchetype(archetype);
 
   SparseList<Component>? getComponentArray(Type type) {
     return _componentArrays[type];
