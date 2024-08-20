@@ -12,15 +12,16 @@ abstract class System {
     this.entityManager = entityManager;
   }
 
-  void process() {
+  void process(Duration delta) {
     final components = view.componentArrays;
     for (var entity in view) {
-      processEntity(entity, components);
+      processEntity(entity, components, delta);
     }
   }
 
   void processEntity(
     Entity entity,
     Map<Type, SparseList<Component>> componentArrays,
+    Duration delta,
   );
 }

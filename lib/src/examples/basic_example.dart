@@ -27,6 +27,7 @@ class MovementSystem extends System {
   void processEntity(
     Entity entity,
     Map<Type, SparseList<Component>> componentArrays,
+    Duration delta,
   ) {
     final position = componentArrays[Position]![entity] as Position;
     final velocity = componentArrays[Velocity]![entity] as Velocity;

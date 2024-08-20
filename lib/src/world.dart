@@ -15,9 +15,9 @@ class World {
     }
   }
 
-  void process() {
+  void process({Duration delta = const Duration(milliseconds: 16)}) {
     for (var system in _systems) {
-      system.process();
+      system.process(delta);
     }
   }
 
