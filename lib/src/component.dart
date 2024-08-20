@@ -1,26 +1,31 @@
 import 'package:dentity/src/archetype.dart';
 import 'package:dentity/src/entity.dart';
-import 'package:dentity/src/sparse_array.dart';
+import 'package:dentity/src/sparse_list.dart';
 
 typedef Component = Object;
-typedef ComponentArrayFactory = SparseArray<Component> Function();
+typedef ComponentArrayFactory = SparseList<Component> Function();
 
-abstract class ComponentsInterface {
+abstract class ComponentsReadOnlyInterface {
   Iterable<Type> get componentTypes;
   T? getComponent<T extends Component>(Entity entity);
   Iterable<Component> getComponents(Entity entity);
   Component? getComponentByType(Type componentType, Entity entity);
   bool hasComponent<T>(Entity entity);
   bool hasComponentByType(Entity entity, Type type);
-  void addComponents(Entity entity, Iterable<Component> components);
   Iterable<T> getAllComponents<T extends Component>();
+  Map<Type, SparseList<Component>> componentsForTypes(Iterable<Type> types);
+  Map<Type, SparseList<Component>> componentsForArchetype(Archetype archetype);
+}
+
+abstract class ComponentsInterface extends ComponentsReadOnlyInterface {
+  void addComponents(Entity entity, Iterable<Component> components);
   void removeAllComponents(Entity entity);
   void removeComponentsByType(Entity entity, Iterable<Type> componentTypes);
   void removeComponent<T extends Component>(Entity entity);
 }
 
 class ComponentManager implements ComponentsInterface {
-  final Map<Type, SparseArray<Component>> _componentArrays = {};
+  final Map<Type, SparseList<Component>> _componentArrays = {};
   late final Map<Type, ComponentArrayFactory> _componentArrayFactories;
   late ArchetypeManager _archetypeManager;
   ArchetypeManager get archetypeManager => _archetypeManager;
@@ -30,6 +35,24 @@ class ComponentManager implements ComponentsInterface {
   }) {
     _componentArrayFactories = componentArrayFactories;
     _archetypeManager = ArchetypeManager(_componentArrayFactories.keys);
+    for (var entry in _componentArrayFactories.entries) {
+      _componentArrays[entry.key] = entry.value(); // Create the component array
+    }
+  }
+
+  @override
+  Map<Type, SparseList<Component>> componentsForTypes(Iterable<Type> types) {
+    final entries =
+        _componentArrays.entries.where((entry) => types.contains(entry.key));
+    return Map.fromEntries(entries);
+  }
+
+  @override
+  Map<Type, SparseList<Component>> componentsForArchetype(
+    Archetype archetype,
+  ) {
+    final types = _archetypeManager.getComponentTypes(archetype);
+    return componentsForTypes(types);
   }
 
   @override
@@ -56,7 +79,10 @@ class ComponentManager implements ComponentsInterface {
   Iterable<T> getAllComponents<T extends Component>() {
     var componentType = T;
     var componentArray = _componentArrays[componentType];
-    return componentArray?.values.cast<T>() ?? [];
+    if (componentArray == null) {
+      return [];
+    }
+    return componentArray.values.cast<T>();
   }
 
   @override

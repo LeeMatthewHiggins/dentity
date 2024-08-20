@@ -2,9 +2,11 @@ import 'package:dentity/dentity.dart';
 
 class World {
   final EntityManager _entityManager;
+  final ComponentManager _componentManager;
   final List<System> _systems;
 
   World(
+    this._componentManager,
     this._entityManager,
     this._systems,
   ) {
@@ -24,7 +26,7 @@ class World {
   }
 
   T? getComponent<T extends Component>(Entity entity) {
-    return _entityManager.getComponent<T>(entity);
+    return _componentManager.getComponent<T>(entity);
   }
 
   void addComponents(Entity entity, Iterable<Component> components) {

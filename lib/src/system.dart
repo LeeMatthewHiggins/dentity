@@ -1,24 +1,28 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/src/archetype.dart';
 
 abstract class System {
   late final EntityView view;
   late final EntityManager entityManager;
-  late final ArchetypeManager archetypeManager;
+  late final ComponentsReadOnlyInterface componentManager;
   Set<Type> get filterTypes;
 
   void attach(EntityManager entityManager) {
-    archetypeManager = entityManager.componentManager.archetypeManager;
+    final archetypeManager = entityManager.componentManager.archetypeManager;
     final archetype = archetypeManager.getArchetype(filterTypes);
     view = entityManager.view(archetype);
+    componentManager = entityManager.componentManager;
     this.entityManager = entityManager;
   }
 
   void process() {
+    final components = view.componentArrays;
     for (var entity in view) {
-      processEntity(entity);
+      processEntity(entity, components);
     }
   }
 
-  void processEntity(Entity entity);
+  void processEntity(
+    Entity entity,
+    Map<Type, SparseList<Component>> componentArrays,
+  );
 }

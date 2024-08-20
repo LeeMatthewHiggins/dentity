@@ -1,58 +1,6 @@
 import 'package:dentity/dentity.dart';
 import 'package:test/test.dart';
 
-class Position extends Component {
-  double x;
-  double y;
-
-  Position(this.x, this.y);
-}
-
-class Velocity extends Component {
-  double x;
-  double y;
-
-  Velocity(this.x, this.y);
-}
-
-class OtherComponent extends Component {
-  OtherComponent();
-}
-
-class MovementSystem extends System {
-  MovementSystem();
-  @override
-  Set<Type> get filterTypes => const {Position, Velocity};
-
-  @override
-  void processEntity(Entity entity) {
-    var position = view.getComponent<Position>(entity)!;
-    var velocity = view.getComponent<Velocity>(entity)!;
-    position.x += velocity.x;
-    position.y += velocity.y;
-  }
-}
-
-ComponentManager _createComponentManager() {
-  return ComponentManager(
-    componentArrayFactories: {
-      Position: () => SimpleSparseArray<Position>(),
-      Velocity: () => SimpleSparseArray<Velocity>(),
-      OtherComponent: () => SimpleSparseArray<OtherComponent>(),
-    },
-  );
-}
-
-World _createWorld() {
-  final componentManager = _createComponentManager();
-  final entityManager = EntityManager(componentManager);
-  final movementSystem = MovementSystem();
-  return World(
-    entityManager,
-    [movementSystem],
-  );
-}
-
 void main() {
   group(
     'Test Functionality',
@@ -60,7 +8,7 @@ void main() {
       test(
         'Test an example system runs only on entities it should',
         () {
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
           final testEntity = world.createEntity(
             [
               Position(0, 0),
@@ -90,7 +38,7 @@ void main() {
         'Test an example system runs multiple times correctly',
         () {
           const runTimes = 10;
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
           final testEntity = world.createEntity(
             [
               Position(0, 0),
@@ -111,7 +59,7 @@ void main() {
       test(
         'Test system does not process entities without required components',
         () {
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
           final entityWithoutVelocity = world.createEntity([Position(0, 0)]);
 
           world.process();
@@ -125,7 +73,7 @@ void main() {
       test(
         'Test system processes multiple entities correctly',
         () {
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
 
           final entity1 = world.createEntity([Position(0, 0), Velocity(1, 1)]);
           final entity2 =
@@ -146,7 +94,7 @@ void main() {
       test(
         'Test system does not fail with no entities',
         () {
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
           // No entities created
           world.process();
           // No assertions needed, just ensuring no exceptions are thrown
@@ -156,7 +104,7 @@ void main() {
       test(
         'Test system handles an entity removal correctly',
         () {
-          final world = _createWorld();
+          final world = createBasicExampleWorld();
 
           final entity = world.createEntity([Position(0, 0), Velocity(1, 1)]);
           world.process();
@@ -171,7 +119,7 @@ void main() {
       );
 
       test('Reuse of entities', () {
-        final world = _createWorld();
+        final world = createBasicExampleWorld();
         world.createEntity([Position(0, 0), Velocity(1, 1)]);
         final positionOnly = world.createEntity([Position(0, 0)]);
         final entity2 = world.createEntity([Position(0, 0), Velocity(1, 1)]);
@@ -184,7 +132,7 @@ void main() {
       });
 
       test('test mutation of entity', () {
-        final world = _createWorld();
+        final world = createBasicExampleWorld();
         final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
         final entity2 = world.createEntity({Position(0, 0), Velocity(1, 1)});
         world.removeComponents(entity1, {Position});
@@ -201,21 +149,23 @@ void main() {
   );
 
   group('Test Performance', () {
-    const runTimes = 1000;
+    const runTimes = 120; // 120fps
+    const entityCount =
+        2000; // runtimes * entityCount is number of entity process ops
     test('Creation', () {
-      final world = _createWorld();
+      final world = createBasicExampleWorld();
       final sw = Stopwatch()..start();
-      for (var i = 0; i < runTimes; i++) {
+      for (var i = 0; i < entityCount; i++) {
         world.createEntity([Position(0, 0), Velocity(1, 1)]);
       }
       sw.stop();
       print('Creation benchmark took ${sw.elapsedMilliseconds}ms');
-      expect(sw.elapsedMilliseconds, lessThan(10));
+      expect(sw.elapsedMilliseconds, lessThan(32));
     });
 
     test('Processing', () {
-      final world = _createWorld();
-      for (var i = 0; i < runTimes; i++) {
+      final world = createBasicExampleWorld();
+      for (var i = 0; i < entityCount; i++) {
         world.createEntity([Position(0, 0), Velocity(1, 1)]);
       }
 
@@ -224,24 +174,24 @@ void main() {
         world.process();
       }
       sw.stop();
-      print('Processing Benchmark took ${sw.elapsedMilliseconds}ms');
-      expect(sw.elapsedMilliseconds, lessThan(50));
+      print('Processing benchmark took ${sw.elapsedMilliseconds}ms');
+      expect(sw.elapsedMilliseconds, lessThan(16));
     });
 
     test('Removal', () {
-      final world = _createWorld();
+      final world = createBasicExampleWorld();
       final entities = <Entity>[];
-      for (var i = 0; i < runTimes; i++) {
+      for (var i = 0; i < entityCount; i++) {
         entities.add(world.createEntity([Position(0, 0), Velocity(1, 1)]));
       }
 
       final sw = Stopwatch()..start();
-      for (var i = 0; i < runTimes; i++) {
+      for (var i = 0; i < entityCount; i++) {
         world.destroyEntity(entities[i]);
       }
       sw.stop();
-      print('Removal Benchmark took ${sw.elapsedMilliseconds}ms');
-      expect(sw.elapsedMilliseconds, lessThan(10));
+      print('Removal benchmark took ${sw.elapsedMilliseconds}ms');
+      expect(sw.elapsedMilliseconds, lessThan(32));
     });
   });
 }

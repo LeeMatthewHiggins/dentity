@@ -1,6 +1,4 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/src/archetype.dart';
-import 'package:dentity/src/dentity_base.dart';
 
 typedef Entity = int;
 
@@ -55,10 +53,6 @@ class EntityManager {
     _entityByArchetype.remove(entity);
   }
 
-  T? getComponent<T extends Component>(Entity entity) {
-    return _componentManager.getComponent<T>(entity);
-  }
-
   void addComponents(Entity entity, Iterable<Component> components) {
     _componentManager.addComponents(entity, components);
     final newArhcetype = _archetypeManager.getArchetype(
@@ -104,18 +98,20 @@ class EntityManager {
 class EntityView implements Iterable<Entity> {
   final EntityManager entityManager;
   final Archetype archetype;
+  final Map<Type, SparseList<Component>> _componentArrays;
+  Map<Type, SparseList<Component>> get componentArrays => _componentArrays;
 
-  EntityView(this.entityManager, this.archetype);
+  EntityView(this.entityManager, this.archetype)
+      : _componentArrays =
+            entityManager.componentManager.componentsForArchetype(
+          archetype,
+        );
 
   Iterable<Entity> get _entities =>
       entityManager._getEntitiesForArchetype(archetype);
 
-  T? getComponent<T extends Component>(Entity entity) {
-    return entityManager.getComponent<T>(entity);
-  }
-
-  void addComponents(Entity entity, Iterable<Component> components) {
-    entityManager.addComponents(entity, components);
+  SparseList<Component>? getComponentArray(Type type) {
+    return _componentArrays[type];
   }
 
   @override
