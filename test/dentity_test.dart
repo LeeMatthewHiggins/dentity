@@ -337,20 +337,38 @@ void main() {
 
         final first = jsonMap[WorldSerialiserJson.entitiesField].first;
 
-        expect(first[EntitySerialiserJson.componentsField], isMap);
+        expect(first[EntitySerialiserJson.componentsField], isList);
         final components =
-            first[EntitySerialiserJson.componentsField] as Map<String, dynamic>;
-        expect(components['Position'], isMap);
-        final position = components['Position'] as Map<String, dynamic>;
+            first[EntitySerialiserJson.componentsField] as List<dynamic>;
+        expect(components.first, isMap);
+        final position = components.first as Map<String, dynamic>;
         expect(position['x'], 0);
         expect(position['y'], 0);
-        expect(components['Velocity'], isMap);
-        final velocity = components['Velocity'] as Map<String, dynamic>;
+        expect(components[1], isMap);
+        final velocity = components[1] as Map<String, dynamic>;
         expect(velocity['x'], 10);
         expect(velocity['y'], 10);
 
         final jsonString = jsonEncode(json);
         expect(jsonString, isNotEmpty);
+
+        final decoded = jsonDecode(jsonString);
+        expect(decoded, isMap);
+
+        final deserialized = worldSerialiser.deserialize(decoded);
+        expect(deserialized, isNotEmpty);
+
+        final deserializedPosition =
+            world.getComponent<Position>(deserialized.first);
+
+        expect(deserializedPosition?.x, 0);
+        expect(deserializedPosition?.y, 0);
+
+        final deserializedVelocity =
+            world.getComponent<Velocity>(deserialized.first);
+
+        expect(deserializedVelocity?.x, 10);
+        expect(deserializedVelocity?.y, 10);
       });
     },
   );

@@ -5,6 +5,8 @@ typedef ComponentRepresentation = Object;
 abstract class ComponentSerializer<T> {
   ComponentRepresentation? serialize(T component);
   T deserialize(ComponentRepresentation data);
+  bool canSerialize(Object component);
+  bool canDeserialize(ComponentRepresentation data);
 }
 
 class EntityComponentsSerializer {
@@ -27,5 +29,19 @@ class EntityComponentsSerializer {
         .map(serializeComponent)
         .where((c) => c != null)
         .cast<ComponentRepresentation>();
+  }
+
+  Component deserializeComponent(ComponentRepresentation data) {
+    final serializer = _serializers.values.firstWhere(
+      (entry) => entry.canDeserialize(data),
+      orElse: () => throw ArgumentError('No serializer found for $data'),
+    );
+    return serializer.deserialize(data);
+  }
+
+  Iterable<Component> deserializeComponents(
+    Iterable<ComponentRepresentation> data,
+  ) {
+    return data.map(deserializeComponent);
   }
 }

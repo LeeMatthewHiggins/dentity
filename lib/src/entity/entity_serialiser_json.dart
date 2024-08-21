@@ -14,13 +14,12 @@ class EntitySerialiserJson extends EntitySerialiser {
     Entity entity,
     Iterable<ComponentRepresentation> components,
   ) {
-    final componentMap = <String, ComponentRepresentation>{};
-
+    final componentList = <ComponentRepresentation>[];
     for (var component in components) {
       if (component is Map<String, dynamic>) {
         final type = component[typeField];
         if (type is String && type.isNotEmpty) {
-          componentMap[type] = component;
+          componentList.add(component);
         } else {
           throw ArgumentError('Component missing or invalid $typeField field');
         }
@@ -30,6 +29,24 @@ class EntitySerialiserJson extends EntitySerialiser {
       }
     }
 
-    return {componentsField: componentMap};
+    return {componentsField: componentList};
+  }
+
+  @override
+  Iterable<ComponentRepresentation> deserializeEntityComponents(
+    EntityRepresentation data,
+  ) {
+    if (data is Map<String, dynamic>) {
+      final components = data[componentsField];
+      if (components is List<dynamic>) {
+        return components.whereType<Object>();
+      } else {
+        throw ArgumentError(
+            'Invalid entity representation: expected List<Map<String, dynamic>> got ${components.runtimeType}');
+      }
+    } else {
+      throw ArgumentError(
+          'Invalid entity representation: expected Map<String, dynamic>');
+    }
   }
 }

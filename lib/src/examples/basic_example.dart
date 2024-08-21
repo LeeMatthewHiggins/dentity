@@ -64,46 +64,90 @@ class Velocity extends Component {
 }
 
 class PositionSerializer extends ComponentSerializer<Position> {
+  static const type = 'Position';
   @override
   ComponentRepresentation? serialize(Position component) {
     return {
       'x': component.x,
       'y': component.y,
-      EntitySerialiserJson.typeField: 'Position'
+      EntitySerialiserJson.typeField: type
     };
   }
 
   @override
   Position deserialize(ComponentRepresentation data) {
-    throw UnimplementedError();
+    final positionData = data as Map<String, dynamic>;
+    return Position(
+      positionData['x'] as double,
+      positionData['y'] as double,
+    );
+  }
+
+  @override
+  bool canSerialize(Object component) {
+    return component is Position;
+  }
+
+  @override
+  bool canDeserialize(ComponentRepresentation data) {
+    return data is Map<String, dynamic> &&
+        data[EntitySerialiserJson.typeField] == type;
   }
 }
 
 class VelocitySerializer extends ComponentSerializer<Velocity> {
+  static const type = 'Velocity';
   @override
   ComponentRepresentation? serialize(Velocity component) {
     return {
       'x': component.x,
       'y': component.y,
-      EntitySerialiserJson.typeField: 'Velocity'
+      EntitySerialiserJson.typeField: type
     };
   }
 
   @override
   Velocity deserialize(ComponentRepresentation data) {
-    throw UnimplementedError();
+    final velocityData = data as Map<String, dynamic>;
+    return Velocity(
+      velocityData['x'] as double,
+      velocityData['y'] as double,
+    );
+  }
+
+  @override
+  bool canSerialize(Object component) {
+    return component is Velocity;
+  }
+
+  @override
+  bool canDeserialize(ComponentRepresentation data) {
+    return data is Map<String, dynamic> &&
+        data[EntitySerialiserJson.typeField] == 'Velocity';
   }
 }
 
 class OtherComponentSerializer extends ComponentSerializer<OtherComponent> {
+  static const type = 'OtherComponent';
   @override
   ComponentRepresentation? serialize(OtherComponent component) {
-    return {EntitySerialiserJson.typeField: 'OtherComponent'};
+    return {EntitySerialiserJson.typeField: type};
   }
 
   @override
   OtherComponent deserialize(ComponentRepresentation data) {
-    throw UnimplementedError();
+    return OtherComponent();
+  }
+
+  @override
+  bool canSerialize(Object component) {
+    return component is OtherComponent;
+  }
+
+  @override
+  bool canDeserialize(ComponentRepresentation data) {
+    return data is Map<String, dynamic> &&
+        data[EntitySerialiserJson.typeField] == type;
   }
 }
 

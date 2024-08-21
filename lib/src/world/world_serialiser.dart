@@ -11,6 +11,17 @@ abstract class WorldSerialiser {
     this._entitySerialiser,
   );
 
+  Iterable<Entity> deserialize(WorldRepresentation data) {
+    final entitiesRepresentations = deserializeEntities(data);
+    final entities = <Entity>[];
+    for (var representation in entitiesRepresentations) {
+      entities.add(
+        _entitySerialiser.deserializeEntity(representation),
+      );
+    }
+    return entities;
+  }
+
   WorldRepresentation serialize() {
     final entities = _entityManager.entities;
     final entityReps =
@@ -20,5 +31,9 @@ abstract class WorldSerialiser {
 
   WorldRepresentation serializeEntities(
     Iterable<EntityRepresentation> entities,
+  );
+
+  Iterable<EntityRepresentation> deserializeEntities(
+    WorldRepresentation data,
   );
 }
