@@ -318,9 +318,9 @@ void main() {
         final EntitySerialiser entitySerialiser = EntitySerialiserJson(
           world.entityManager,
           {
-            Position: PositionSerializer(),
-            Velocity: VelocitySerializer(),
-            OtherComponent: OtherComponentSerializer(),
+            Position: PositionJsonSerializer(),
+            Velocity: VelocityJsonSerializer(),
+            OtherComponent: OtherComponentJsonSerializer(),
           },
         );
 

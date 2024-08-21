@@ -63,7 +63,7 @@ class Velocity extends Component {
   }
 }
 
-class PositionSerializer extends ComponentSerializer<Position> {
+class PositionJsonSerializer extends ComponentSerializer<Position> {
   static const type = 'Position';
   @override
   ComponentRepresentation? serialize(Position component) {
@@ -95,7 +95,7 @@ class PositionSerializer extends ComponentSerializer<Position> {
   }
 }
 
-class VelocitySerializer extends ComponentSerializer<Velocity> {
+class VelocityJsonSerializer extends ComponentSerializer<Velocity> {
   static const type = 'Velocity';
   @override
   ComponentRepresentation? serialize(Velocity component) {
@@ -127,7 +127,7 @@ class VelocitySerializer extends ComponentSerializer<Velocity> {
   }
 }
 
-class OtherComponentSerializer extends ComponentSerializer<OtherComponent> {
+class OtherComponentJsonSerializer extends ComponentSerializer<OtherComponent> {
   static const type = 'OtherComponent';
   @override
   ComponentRepresentation? serialize(OtherComponent component) {

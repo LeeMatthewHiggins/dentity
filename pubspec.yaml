@@ -1,7 +1,8 @@
 name: dentity
-description: A starting point for Dart libraries or applications.
+description: A powerful and flexible Entity-Component-System (ECS) framework for Dart application.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/LeeMatthewHiggins/dentity
+homepage: https://www.wearemobilefirst.com
 
 environment:
   sdk: ^3.4.3
