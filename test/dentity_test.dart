@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dentity/dentity.dart';
 import 'package:dentity/dentity_examples.dart';
+import 'package:dentity/src/entity/entity_serialiser_json.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -300,6 +303,55 @@ void main() {
           expect(position2?.y, 1);
         },
       );
+
+      test('test serialization works', () {
+        final world = createBasicExampleWorld();
+        world.createEntity({
+          Position(0, 0),
+          Velocity(10, 10),
+        });
+        world.createEntity({
+          Position(1, 1),
+          Velocity(20, 20),
+        });
+
+        final EntitySerialiser entitySerialiser = EntitySerialiserJson(
+          world.entityManager,
+          {
+            Position: PositionSerializer(),
+            Velocity: VelocitySerializer(),
+            OtherComponent: OtherComponentSerializer(),
+          },
+        );
+
+        final WorldSerialiser worldSerialiser = WorldSerialiserJson(
+          world.entityManager,
+          entitySerialiser,
+        );
+
+        final json = worldSerialiser.serialize();
+        expect(json, isNotNull);
+        expect(json, isMap);
+        final jsonMap = json as Map<String, dynamic>;
+        expect(jsonMap[WorldSerialiserJson.entitiesField], isList);
+
+        final first = jsonMap[WorldSerialiserJson.entitiesField].first;
+
+        expect(first[EntitySerialiserJson.componentsField], isMap);
+        final components =
+            first[EntitySerialiserJson.componentsField] as Map<String, dynamic>;
+        expect(components['Position'], isMap);
+        final position = components['Position'] as Map<String, dynamic>;
+        expect(position['x'], 0);
+        expect(position['y'], 0);
+        expect(components['Velocity'], isMap);
+        final velocity = components['Velocity'] as Map<String, dynamic>;
+        expect(velocity['x'], 10);
+        expect(velocity['y'], 10);
+
+        final jsonString = jsonEncode(json);
+        expect(jsonString, isNotEmpty);
+      });
     },
   );
 

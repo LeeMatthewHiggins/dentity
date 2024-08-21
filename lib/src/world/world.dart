@@ -1,6 +1,7 @@
 import 'package:dentity/dentity.dart';
 
 class World {
+  EntityManager get entityManager => _entityManager;
   final EntityManager _entityManager;
   final ComponentManager _componentManager;
   final List<EntitySystem> _systems;

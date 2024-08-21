@@ -1,6 +1,6 @@
-import 'package:dentity/src/archetype.dart';
-import 'package:dentity/src/entity.dart';
-import 'package:dentity/src/sparse_list.dart';
+import 'package:dentity/src/archetype/archetype.dart';
+import 'package:dentity/src/entity/entity.dart';
+import 'package:dentity/src/sparse_list/sparse_list.dart';
 
 abstract class Component extends Object implements Comparable {
   Component clone();
@@ -81,9 +81,8 @@ class ComponentManager implements ComponentsInterface {
   }
 
   @override
-  Component? getComponentByType(Type componentType, Entity entity) {
-    return _getComponentArray(componentType)?[entity];
-  }
+  Component? getComponentByType(Type componentType, Entity entity) =>
+      _getComponentArray(componentType)?[entity];
 
   @override
   Iterable<T> getComponentsOfType<T extends Component>() {
@@ -98,14 +97,11 @@ class ComponentManager implements ComponentsInterface {
   Iterable<Type> get componentTypes => _componentArrays.keys;
 
   @override
-  bool hasComponentByType(Entity entity, Type type) {
-    return _getComponentArray(type)?[entity] != null;
-  }
+  bool hasComponentByType(Entity entity, Type type) =>
+      _getComponentArray(type)?[entity] != null;
 
   @override
-  bool hasComponent<T>(Entity entity) {
-    return hasComponentByType(entity, T);
-  }
+  bool hasComponent<T>(Entity entity) => hasComponentByType(entity, T);
 
   @override
   void addComponents(Entity entity, Iterable<Component> components) {

@@ -1,4 +1,5 @@
 import 'package:dentity/dentity.dart';
+import 'package:dentity/src/entity/entity_serialiser_json.dart';
 
 class Position extends Component {
   double x;
@@ -59,6 +60,50 @@ class Velocity extends Component {
       return x.compareTo(other.x) + y.compareTo(other.y);
     }
     return -1;
+  }
+}
+
+class PositionSerializer extends ComponentSerializer<Position> {
+  @override
+  ComponentRepresentation? serialize(Position component) {
+    return {
+      'x': component.x,
+      'y': component.y,
+      EntitySerialiserJson.typeField: 'Position'
+    };
+  }
+
+  @override
+  Position deserialize(ComponentRepresentation data) {
+    throw UnimplementedError();
+  }
+}
+
+class VelocitySerializer extends ComponentSerializer<Velocity> {
+  @override
+  ComponentRepresentation? serialize(Velocity component) {
+    return {
+      'x': component.x,
+      'y': component.y,
+      EntitySerialiserJson.typeField: 'Velocity'
+    };
+  }
+
+  @override
+  Velocity deserialize(ComponentRepresentation data) {
+    throw UnimplementedError();
+  }
+}
+
+class OtherComponentSerializer extends ComponentSerializer<OtherComponent> {
+  @override
+  ComponentRepresentation? serialize(OtherComponent component) {
+    return {EntitySerialiserJson.typeField: 'OtherComponent'};
+  }
+
+  @override
+  OtherComponent deserialize(ComponentRepresentation data) {
+    throw UnimplementedError();
   }
 }
 
