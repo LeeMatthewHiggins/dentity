@@ -27,14 +27,16 @@ abstract class ComponentsInterface extends ComponentsReadOnlyInterface {
 class ComponentManager implements ComponentsInterface {
   final Map<Type, SparseList<Component>> _componentArrays = {};
   late final Map<Type, ComponentArrayFactory> _componentArrayFactories;
-  late ArchetypeManager _archetypeManager;
-  ArchetypeManager get archetypeManager => _archetypeManager;
+  late ArchetypeManagerIterface _archetypeManager;
+  ArchetypeManagerIterface get archetypeManager => _archetypeManager;
 
   ComponentManager({
     Map<Type, ComponentArrayFactory> componentArrayFactories = const {},
+    required ArchetypeManagerIterface Function(Iterable<Type>)
+        archetypeManagerFactory,
   }) {
     _componentArrayFactories = componentArrayFactories;
-    _archetypeManager = ArchetypeManager(_componentArrayFactories.keys);
+    _archetypeManager = archetypeManagerFactory(_componentArrayFactories.keys);
     for (var entry in _componentArrayFactories.entries) {
       _componentArrays[entry.key] = entry.value(); // Create the component array
     }

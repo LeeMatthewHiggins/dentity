@@ -1,4 +1,5 @@
 import 'package:dentity/dentity.dart';
+import 'package:dentity/src/archetype_manager_big_int.dart';
 
 class Position extends Component {
   double x;
@@ -38,6 +39,7 @@ class MovementSystem extends System {
 
 ComponentManager _createSimpleComponentManager() {
   return ComponentManager(
+    archetypeManagerFactory: (types) => ArchetypeManagerBigInt(types),
     componentArrayFactories: {
       Position: () => SimpleSparseList<Position>(),
       Velocity: () => SimpleSparseList<Velocity>(),
@@ -48,6 +50,7 @@ ComponentManager _createSimpleComponentManager() {
 
 ComponentManager _createContiguousComponentManager() {
   return ComponentManager(
+    archetypeManagerFactory: (types) => ArchetypeManagerBigInt(types),
     componentArrayFactories: {
       Position: () => ContiguousSparseList<Position>(),
       Velocity: () => ContiguousSparseList<Velocity>(),

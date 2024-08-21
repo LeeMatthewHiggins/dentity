@@ -9,7 +9,7 @@ class EntityManager {
   Entity _newEntity = 0;
   ComponentManager get componentManager => _componentManager;
   final ComponentManager _componentManager;
-  final ArchetypeManager _archetypeManager;
+  final ArchetypeManagerIterface _archetypeManager;
 
   final Map<Archetype, Set<Entity>> _recycleBin = {};
 
@@ -83,7 +83,7 @@ class EntityManager {
 
   Iterable<Entity> _getEntitiesMatchingSubArchetypes(Archetype archetype) {
     return _entitiesByArchetype.entries
-        .where((e) => (e.key & archetype) == archetype)
+        .where((e) => _archetypeManager.isSubtype(e.key, archetype))
         .expand((e) => e.value);
   }
 
