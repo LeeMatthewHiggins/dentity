@@ -1,6 +1,6 @@
 typedef Archetype = Object;
 
-abstract class ArchetypeManagerIterface {
+abstract class ArchetypeManagerInterface {
   Archetype getArchetype(Iterable<Type> componentTypes);
   Iterable<Type> getComponentTypes(Archetype archetype);
   bool isSubtype(Archetype a, Archetype b);

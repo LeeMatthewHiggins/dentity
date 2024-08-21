@@ -1,19 +1,30 @@
 import 'package:dentity/dentity.dart';
 
 abstract class System {
-  late final EntityView view;
   late final EntityManager entityManager;
   late final ComponentsReadOnlyInterface componentManager;
-  Set<Type> get filterTypes;
 
   void attach(EntityManager entityManager) {
-    view = entityManager.viewForTypes(filterTypes);
     componentManager = entityManager.componentManager;
     this.entityManager = entityManager;
   }
 
+  void process(Duration delta);
+}
+
+abstract class EntitySystem extends System {
+  late final EntityView view;
+  Set<Type> get filterTypes;
+
+  @override
+  void attach(EntityManager entityManager) {
+    view = entityManager.viewForTypes(filterTypes);
+    super.attach(entityManager);
+  }
+
+  @override
   void process(Duration delta) {
-    final components = view.componentArrays;
+    final components = view.componentLists;
     for (var entity in view) {
       processEntity(entity, components, delta);
     }
@@ -21,7 +32,7 @@ abstract class System {
 
   void processEntity(
     Entity entity,
-    Map<Type, SparseList<Component>> componentArrays,
+    Map<Type, SparseList<Component>> componentLists,
     Duration delta,
   );
 }

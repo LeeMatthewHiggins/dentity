@@ -2,7 +2,10 @@ import 'package:dentity/src/archetype.dart';
 import 'package:dentity/src/entity.dart';
 import 'package:dentity/src/sparse_list.dart';
 
-typedef Component = Object;
+abstract class Component extends Object implements Comparable {
+  Component clone();
+}
+
 typedef ComponentArrayFactory = SparseList<Component> Function();
 
 abstract class ComponentsReadOnlyInterface {
@@ -27,12 +30,12 @@ abstract class ComponentsInterface extends ComponentsReadOnlyInterface {
 class ComponentManager implements ComponentsInterface {
   final Map<Type, SparseList<Component>> _componentArrays = {};
   late final Map<Type, ComponentArrayFactory> _componentArrayFactories;
-  late ArchetypeManagerIterface _archetypeManager;
-  ArchetypeManagerIterface get archetypeManager => _archetypeManager;
+  late ArchetypeManagerInterface _archetypeManager;
+  ArchetypeManagerInterface get archetypeManager => _archetypeManager;
 
   ComponentManager({
     Map<Type, ComponentArrayFactory> componentArrayFactories = const {},
-    required ArchetypeManagerIterface Function(Iterable<Type>)
+    required ArchetypeManagerInterface Function(Iterable<Type>)
         archetypeManagerFactory,
   }) {
     _componentArrayFactories = componentArrayFactories;

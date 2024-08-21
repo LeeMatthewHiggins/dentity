@@ -1,6 +1,6 @@
 import 'package:dentity/dentity.dart';
 
-class ArchetypeManagerBigInt implements ArchetypeManagerIterface {
+class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
   final Map<Type, int> _componentTypeToBitIndex = {};
 
   ArchetypeManagerBigInt(Iterable<Type> types) {

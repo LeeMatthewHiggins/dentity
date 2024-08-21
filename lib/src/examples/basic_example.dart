@@ -1,11 +1,35 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/src/archetype_manager_big_int.dart';
+import 'package:dentity/src/archetypes/archetype_manager_big_int.dart';
 
 class Position extends Component {
   double x;
   double y;
 
   Position(this.x, this.y);
+
+  @override
+  Position clone() {
+    return Position(x, y);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Position) {
+      return x == other.x && y == other.y;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => x.hashCode ^ y.hashCode;
+
+  @override
+  int compareTo(other) {
+    if (other is Position) {
+      return x.compareTo(other.x) + y.compareTo(other.y);
+    }
+    return -1;
+  }
 }
 
 class Velocity extends Component {
@@ -13,13 +37,58 @@ class Velocity extends Component {
   double y;
 
   Velocity(this.x, this.y);
+
+  @override
+  Velocity clone() {
+    return Velocity(x, y);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (other is Velocity) {
+      return x == other.x && y == other.y;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => x.hashCode ^ y.hashCode;
+
+  @override
+  int compareTo(other) {
+    if (other is Velocity) {
+      return x.compareTo(other.x) + y.compareTo(other.y);
+    }
+    return -1;
+  }
 }
 
 class OtherComponent extends Component {
   OtherComponent();
+
+  @override
+  OtherComponent clone() {
+    return OtherComponent();
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is OtherComponent;
+  }
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  int compareTo(other) {
+    if (other is OtherComponent) {
+      return 0;
+    }
+    return -1;
+  }
 }
 
-class MovementSystem extends System {
+class MovementSystem extends EntitySystem {
   MovementSystem();
   @override
   Set<Type> get filterTypes => const {Position, Velocity};

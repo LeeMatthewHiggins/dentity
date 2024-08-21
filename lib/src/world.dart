@@ -3,7 +3,7 @@ import 'package:dentity/dentity.dart';
 class World {
   final EntityManager _entityManager;
   final ComponentManager _componentManager;
-  final List<System> _systems;
+  final List<EntitySystem> _systems;
 
   World(
     this._componentManager,
