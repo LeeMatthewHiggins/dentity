@@ -21,33 +21,21 @@ class World {
     }
   }
 
-  int createEntity(Iterable<Component> components) {
-    return _entityManager.createEntity(components);
-  }
+  int createEntity(Iterable<Component> components) =>
+      _entityManager.createEntity(components);
 
-  T? getComponent<T extends Component>(Entity entity) {
-    return _componentManager.getComponent<T>(entity);
-  }
+  T? getComponent<T extends Component>(Entity entity) =>
+      _componentManager.getComponent<T>(entity);
 
-  void addComponents(Entity entity, Iterable<Component> components) {
-    _entityManager.addComponents(entity, components);
-  }
-
-  void removeComponents(Entity entity, Iterable<Type> componentTypes) {
-    _entityManager.removeComponents(entity, componentTypes);
-  }
-
-  void destroyEntity(Entity entity) {
-    _entityManager.destroyEntity(entity);
-  }
+  void addComponents(Entity entity, Iterable<Component> components) =>
+      _entityManager.addComponents(entity, components);
+  void removeComponents(Entity entity, Iterable<Type> componentTypes) =>
+      _entityManager.removeComponents(entity, componentTypes);
+  void destroyEntity(Entity entity) => _entityManager.destroyEntity(entity);
 }
 
 extension EntityViewOnWorld on World {
-  EntityView view(Archetype archetype) {
-    return EntityView(_entityManager, archetype);
-  }
-
-  EntityView viewForTypes(Set<Type> types) {
-    return EntityView.fromTypes(_entityManager, types);
-  }
+  EntityView view(Archetype archetype) => EntityView(_entityManager, archetype);
+  EntityView viewForTypes(Set<Type> types) =>
+      EntityView.fromTypes(_entityManager, types);
 }

@@ -6,7 +6,7 @@ abstract class Component extends Object implements Comparable {
   Component clone();
 }
 
-typedef ComponentArrayFactory = SparseList<Component> Function();
+typedef ComponentListFactory = SparseList<Component> Function();
 
 abstract class ComponentsReadOnlyInterface {
   Iterable<Type> get componentTypes;
@@ -15,7 +15,7 @@ abstract class ComponentsReadOnlyInterface {
   Component? getComponentByType(Type componentType, Entity entity);
   bool hasComponent<T>(Entity entity);
   bool hasComponentByType(Entity entity, Type type);
-  Iterable<T> getAllComponents<T extends Component>();
+  Iterable<T> getComponentsOfType<T extends Component>();
   Map<Type, SparseList<Component>> componentsForTypes(Iterable<Type> types);
   Map<Type, SparseList<Component>> componentsForArchetype(Archetype archetype);
 }
@@ -24,26 +24,29 @@ abstract class ComponentsInterface extends ComponentsReadOnlyInterface {
   void addComponents(Entity entity, Iterable<Component> components);
   void removeAllComponents(Entity entity);
   void removeComponentsByType(Entity entity, Iterable<Type> componentTypes);
-  void removeComponent<T extends Component>(Entity entity);
+  void removeComponentByType<T extends Component>(Entity entity);
 }
 
 class ComponentManager implements ComponentsInterface {
   final Map<Type, SparseList<Component>> _componentArrays = {};
-  late final Map<Type, ComponentArrayFactory> _componentArrayFactories;
+  late final Map<Type, ComponentListFactory> _componentArrayFactories;
   late ArchetypeManagerInterface _archetypeManager;
   ArchetypeManagerInterface get archetypeManager => _archetypeManager;
 
   ComponentManager({
-    Map<Type, ComponentArrayFactory> componentArrayFactories = const {},
+    Map<Type, ComponentListFactory> componentArrayFactories = const {},
     required ArchetypeManagerInterface Function(Iterable<Type>)
         archetypeManagerFactory,
   }) {
     _componentArrayFactories = componentArrayFactories;
     _archetypeManager = archetypeManagerFactory(_componentArrayFactories.keys);
     for (var entry in _componentArrayFactories.entries) {
-      _componentArrays[entry.key] = entry.value(); // Create the component array
+      _componentArrays[entry.key] = entry.value();
     }
   }
+
+  SparseList<Component>? _getComponentArray(Type type) =>
+      _componentArrays[type];
 
   @override
   Map<Type, SparseList<Component>> componentsForTypes(Iterable<Type> types) {
@@ -62,28 +65,29 @@ class ComponentManager implements ComponentsInterface {
 
   @override
   T? getComponent<T extends Component>(Entity entity) {
-    var componentType = T;
-    return getComponentByType(componentType, entity) as T?;
+    final component = getComponentByType(T, entity);
+    if (component is T) {
+      return component;
+    }
+    return null;
   }
 
   @override
-  Iterable<Component> getComponents(Entity entity) {
-    return _componentArrays.values
-        .map((componentArray) => componentArray[entity])
-        .where((component) => component != null)
-        .cast<Component>();
+  Iterable<Component> getComponents(Entity entity) sync* {
+    for (var componentArray in _componentArrays.values) {
+      final component = componentArray[entity];
+      if (component != null) yield component;
+    }
   }
 
   @override
   Component? getComponentByType(Type componentType, Entity entity) {
-    var componentArray = _componentArrays[componentType];
-    return componentArray?[entity];
+    return _getComponentArray(componentType)?[entity];
   }
 
   @override
-  Iterable<T> getAllComponents<T extends Component>() {
-    var componentType = T;
-    var componentArray = _componentArrays[componentType];
+  Iterable<T> getComponentsOfType<T extends Component>() {
+    final componentArray = _getComponentArray(T);
     if (componentArray == null) {
       return [];
     }
@@ -95,7 +99,7 @@ class ComponentManager implements ComponentsInterface {
 
   @override
   bool hasComponentByType(Entity entity, Type type) {
-    return _componentArrays[type]?[entity] != null;
+    return _getComponentArray(type)?[entity] != null;
   }
 
   @override
@@ -107,12 +111,12 @@ class ComponentManager implements ComponentsInterface {
   void addComponents(Entity entity, Iterable<Component> components) {
     for (var component in components) {
       final factory = _componentArrayFactories[component.runtimeType];
-      assert(component is! Type,
-          'You must add an instance of a component, not the type of the component');
-      assert(factory != null,
-          'No factory found for component type ${component.runtimeType}');
-      var componentType = component.runtimeType;
-      _componentArrays[componentType]![entity] = component;
+      if (factory == null) {
+        throw ArgumentError(
+            'No factory found for component type ${component.runtimeType}');
+      }
+      final componentType = component.runtimeType;
+      _componentArrays[componentType]?[entity] = component;
     }
   }
 
@@ -126,19 +130,20 @@ class ComponentManager implements ComponentsInterface {
   @override
   void removeComponentsByType(Entity entity, Iterable<Type> componentTypes) {
     for (var componentType in componentTypes) {
-      var componentArray = _componentArrays[componentType];
-      assert(componentArray != null,
-          'Component type not found in entity ($entity)');
-      componentArray?.remove(entity);
+      final componentArray = _getComponentArray(componentType);
+      if (componentArray == null) {
+        throw ArgumentError('Component type not found in entity ($entity)');
+      }
+      componentArray.remove(entity);
     }
   }
 
   @override
-  void removeComponent<T extends Component>(Entity entity) {
-    var componentType = T;
-    var componentArray = _componentArrays[componentType];
-    assert(
-        componentArray != null, 'Component type not found in entity ($entity)');
-    componentArray?.remove(entity);
+  void removeComponentByType<T extends Component>(Entity entity) {
+    final componentArray = _getComponentArray(T);
+    if (componentArray == null) {
+      throw ArgumentError('Component type not found in entity ($entity)');
+    }
+    componentArray.remove(entity);
   }
 }

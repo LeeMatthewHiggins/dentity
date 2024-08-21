@@ -1,4 +1,5 @@
 import 'package:dentity/dentity.dart';
+import 'package:dentity/dentity_examples.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -61,12 +62,22 @@ void main() {
         () {
           final world = createBasicExampleWorld();
           final entityWithoutVelocity = world.createEntity({Position(0, 0)});
+          final complexEntity = world.createEntity([
+            Position(0, 0),
+            Velocity(1, 1),
+            ...allOtherTypesInstances,
+          ]);
 
           world.process();
 
           final position = world.getComponent<Position>(entityWithoutVelocity);
           expect(position?.x, 0);
           expect(position?.y, 0);
+
+          final complexEntityLastComponent =
+              world.getComponent<OtherComponent65>(complexEntity);
+
+          expect(complexEntityLastComponent, isNotNull);
         },
       );
 

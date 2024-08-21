@@ -24,17 +24,12 @@ class EntityView implements Iterable<Entity> {
   Iterable<Entity> get _entities =>
       _entityManager.getEntitiesMatching(archetype);
 
-  SparseList<Component>? getComponentArray(Type type) {
-    return _componentArrays[type];
-  }
+  SparseList<Component>? getComponentArray(Type type) => _componentArrays[type];
 
-  Component? getComponentForType(Type type, Entity entity) {
-    return _componentArrays[type]?[entity];
-  }
+  Component? getComponentForType(Type type, Entity entity) =>
+      _componentArrays[type]?[entity];
 
-  T? getComponent<T>(Entity entity) {
-    return _componentArrays[T]?[entity] as T?;
-  }
+  T? getComponent<T>(Entity entity) => _componentArrays[T]?[entity] as T?;
 
   @override
   Iterator<Entity> get iterator => _entities.iterator;
@@ -68,7 +63,11 @@ class EntityView implements Iterable<Entity> {
 
   @override
   T fold<T>(
-          T initialValue, T Function(T previousValue, Entity entity) combine) =>
+          T initialValue,
+          T Function(
+            T previousValue,
+            Entity entity,
+          ) combine) =>
       _entities.fold(initialValue, combine);
 
   @override
@@ -143,11 +142,6 @@ class EntityView implements Iterable<Entity> {
 }
 
 extension EntityViewOnEntityManager on EntityManager {
-  EntityView view(Archetype archetype) {
-    return EntityView(this, archetype);
-  }
-
-  EntityView viewForTypes(Set<Type> types) {
-    return EntityView.fromTypes(this, types);
-  }
+  EntityView view(Archetype archetype) => EntityView(this, archetype);
+  EntityView viewForTypes(Set<Type> types) => EntityView.fromTypes(this, types);
 }

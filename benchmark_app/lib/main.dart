@@ -1,5 +1,6 @@
+import 'package:dentity/dentity.dart';
 import 'package:flutter/material.dart';
-import 'package:dentity/dentity.dart' as dentity;
+import 'package:dentity/dentity_examples.dart' as examples;
 
 void main() {
   runApp(const BenchmarkApp());
@@ -45,19 +46,19 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
   }
 
   String benchmarkCreate() {
-    final world = dentity.createBasicExampleWorld();
+    final world = examples.createBasicExampleWorld();
     final sw = Stopwatch()..start();
     for (var i = 0; i < entityCount; i++) {
-      world.createEntity([dentity.Position(0, 0), dentity.Velocity(1, 1)]);
+      world.createEntity([examples.Position(0, 0), examples.Velocity(1, 1)]);
     }
     sw.stop();
     return 'Creation benchmark took ${sw.elapsedMilliseconds}ms to create $entityCount entities';
   }
 
   String benchmarkProcess() {
-    final world = dentity.createBasicExampleWorld();
+    final world = examples.createBasicExampleWorld();
     for (var i = 0; i < entityCount; i++) {
-      world.createEntity([dentity.Position(0, 0), dentity.Velocity(1, 1)]);
+      world.createEntity([examples.Position(0, 0), examples.Velocity(1, 1)]);
     }
 
     final sw = Stopwatch()..start();
@@ -70,11 +71,11 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
   }
 
   String benchmarkRemoval() {
-    final world = dentity.createBasicExampleWorld();
-    final entities = <dentity.Entity>[];
+    final world = examples.createBasicExampleWorld();
+    final entities = <Entity>[];
     for (var i = 0; i < entityCount; i++) {
-      entities.add(
-          world.createEntity([dentity.Position(0, 0), dentity.Velocity(1, 1)]));
+      entities.add(world
+          .createEntity([examples.Position(0, 0), examples.Velocity(1, 1)]));
     }
 
     final sw = Stopwatch()..start();

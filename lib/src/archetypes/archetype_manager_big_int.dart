@@ -14,7 +14,7 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
   Archetype getArchetype(Iterable<Type> componentTypes) {
     BigInt bitset = BigInt.zero;
     for (var componentType in componentTypes) {
-      var bitIndex = _componentTypeToBitIndex[componentType];
+      final bitIndex = _componentTypeToBitIndex[componentType];
       if (bitIndex != null) {
         bitset |= BigInt.one << bitIndex;
       }
@@ -25,7 +25,7 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
   @override
   Iterable<Type> getComponentTypes(Archetype archetype) {
     final archetypeBigInt = archetype as BigInt;
-    var componentTypes = <Type>[];
+    final componentTypes = <Type>[];
     for (var componentType in _componentTypeToBitIndex.keys) {
       var bitIndex = _componentTypeToBitIndex[componentType];
       if (bitIndex != null &&

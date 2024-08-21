@@ -24,17 +24,14 @@ class EntityManager {
       components.map((c) => c.runtimeType),
     );
     final recycleBin = _recycleBin.putIfAbsent(archetype, () => {});
-    final recycled = recycleBin.firstOrNull;
+    final recycled = recycleBin.isEmpty ? null : recycleBin.first;
     if (recycled != null) {
       _componentManager.addComponents(recycled, components);
       recycleBin.remove(recycled);
       return recycled;
     }
     _componentManager.addComponents(_newEntity, components);
-    final newArhcetype = _archetypeManager.getArchetype(
-      components.map((c) => c.runtimeType),
-    );
-    _updateAchetype(_newEntity, newArhcetype);
+    _updateEntityArchetype(_newEntity, archetype);
     return _newEntity++;
   }
 
@@ -44,47 +41,46 @@ class EntityManager {
     return createEntity(components);
   }
 
-  bool hasEntity(Entity entity) {
-    return _entityByArchetype.containsKey(entity);
-  }
+  bool hasEntity(Entity entity) => _entityByArchetype.containsKey(entity);
 
   void destroyEntity(Entity entity) {
     final archetype = getArchetype(entity);
-    if (archetype == null) {
-      return;
-    }
+    if (archetype == null) return;
+
     _recycleBin.putIfAbsent(archetype, () => {}).add(entity);
     _componentManager.removeAllComponents(entity);
-    _entitiesByArchetype[getArchetype(entity)]?.remove(entity);
+    _entitiesByArchetype[archetype]?.remove(entity);
     _entityByArchetype.remove(entity);
   }
 
   void addComponents(Entity entity, Iterable<Component> components) {
     _componentManager.addComponents(entity, components);
-    final newArhcetype = _archetypeManager.getArchetype(
+    final newArchetype = _archetypeManager.getArchetype(
       components.map((c) => c.runtimeType),
     );
-    _updateAchetype(entity, newArhcetype);
+    _updateEntityArchetype(entity, newArchetype);
   }
 
   void removeComponents(Entity entity, Iterable<Type> componentTypes) {
     final currentArchetype = getArchetype(entity);
-    if (currentArchetype == null) {
-      return;
-    }
+    if (currentArchetype == null) return;
+
     final currentComponents =
         _archetypeManager.getComponentTypes(currentArchetype);
 
     _componentManager.removeComponentsByType(entity, componentTypes);
-    final newArhcetype = _archetypeManager.getArchetype(
+    final newArchetype = _archetypeManager.getArchetype(
       currentComponents.where((c) => !componentTypes.contains(c)),
     );
 
-    _updateAchetype(entity, newArhcetype);
+    _updateEntityArchetype(entity, newArchetype);
   }
 
-  Archetype? getArchetype(Entity entity) {
-    return _entityByArchetype[entity];
+  Archetype? getArchetype(Entity entity) => _entityByArchetype[entity];
+
+  Iterable<Entity> getEntitiesWithComponents(Set<Type> types) {
+    final archetype = _archetypeManager.getArchetype(types);
+    return getEntitiesMatching(archetype);
   }
 
   Iterable<Entity> getEntitiesMatching(Archetype archetype) {
@@ -93,17 +89,12 @@ class EntityManager {
         .expand((e) => e.value);
   }
 
-  Iterable<Entity> getEntitiesMatchingTypes(Set<Type> types) {
-    final archetype = _archetypeManager.getArchetype(types);
-    return getEntitiesMatching(archetype);
-  }
-
-  void _updateAchetype(Entity entity, Archetype newArhcetype) {
-    final previousAchetype = getArchetype(entity);
-    _entityByArchetype[entity] = newArhcetype;
-    if (previousAchetype != newArhcetype) {
-      _entitiesByArchetype.putIfAbsent(newArhcetype, () => {}).add(entity);
-      _entitiesByArchetype[previousAchetype]?.remove(entity);
+  void _updateEntityArchetype(Entity entity, Archetype newArchetype) {
+    final previousArchetype = getArchetype(entity);
+    _entityByArchetype[entity] = newArchetype;
+    if (previousArchetype != newArchetype) {
+      _entitiesByArchetype.putIfAbsent(newArchetype, () => {}).add(entity);
+      _entitiesByArchetype[previousArchetype]?.remove(entity);
     }
   }
 }
