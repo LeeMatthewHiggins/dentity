@@ -2,7 +2,17 @@ import 'package:dentity/dentity.dart';
 
 typedef Entity = int;
 
-class EntityManager {
+abstract class EntityManagerListener {
+  void onEntityCreated(Entity entity);
+  void onEntityWillDestroy(Entity entity);
+  void onEntityArchetypeChanged(
+    Entity entity,
+    Archetype newArchetype,
+    Archetype oldArchetype,
+  );
+}
+
+class EntityManager implements EntityManagerListener {
   final Map<Entity, Archetype> _entityByArchetype = {};
   final Map<Archetype, Set<Entity>> _entitiesByArchetype = {};
 
@@ -10,8 +20,8 @@ class EntityManager {
   ComponentManager get componentManager => _componentManager;
   final ComponentManager _componentManager;
   final ArchetypeManagerInterface _archetypeManager;
-
   final Map<Archetype, Set<Entity>> _recycleBin = {};
+  final List<EntityManagerListener> _observers = [];
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
@@ -32,6 +42,7 @@ class EntityManager {
     }
     _componentManager.addComponents(_newEntity, components);
     _updateEntityArchetype(_newEntity, archetype);
+    onEntityCreated(_newEntity);
     return _newEntity++;
   }
 
@@ -46,7 +57,7 @@ class EntityManager {
   void destroyEntity(Entity entity) {
     final archetype = getArchetype(entity);
     if (archetype == null) return;
-
+    onEntityWillDestroy(entity);
     _recycleBin.putIfAbsent(archetype, () => {}).add(entity);
     _componentManager.removeAllComponents(entity);
     _entitiesByArchetype[archetype]?.remove(entity);
@@ -95,6 +106,42 @@ class EntityManager {
     if (previousArchetype != newArchetype) {
       _entitiesByArchetype.putIfAbsent(newArchetype, () => {}).add(entity);
       _entitiesByArchetype[previousArchetype]?.remove(entity);
+      if (previousArchetype != null) {
+        onEntityArchetypeChanged(entity, newArchetype, previousArchetype);
+      }
+    }
+  }
+
+  void addObserver(EntityManagerListener observer) {
+    _observers.add(observer);
+  }
+
+  void removeObserver(EntityManagerListener observer) {
+    _observers.remove(observer);
+  }
+
+  @override
+  void onEntityCreated(Entity entity) {
+    for (var observer in _observers) {
+      observer.onEntityCreated(entity);
+    }
+  }
+
+  @override
+  void onEntityWillDestroy(Entity entity) {
+    for (var observer in _observers) {
+      observer.onEntityWillDestroy(entity);
+    }
+  }
+
+  @override
+  void onEntityArchetypeChanged(
+    Entity entity,
+    Archetype newArchetype,
+    Archetype oldArchetype,
+  ) {
+    for (var observer in _observers) {
+      observer.onEntityArchetypeChanged(entity, newArchetype, oldArchetype);
     }
   }
 }

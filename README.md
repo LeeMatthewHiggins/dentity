@@ -162,7 +162,7 @@ void main() {
   final world = createBasicExampleWorld();
 
   // Create an entity with Position and Velocity components
-  final entity = world.entityManager.createEntity({
+  final entity = world.createEntity({
     Position(0, 0),
     Velocity(1, 1),
   });
@@ -185,7 +185,7 @@ void main() {
   final world = createBasicExampleWorld();
   
   // Create an entity
-  final entity = world.entityManager.createEntity({
+  final entity = world.createEntity({
     Position(0, 0),
     Velocity(1, 1),
   });

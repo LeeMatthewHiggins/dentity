@@ -2,9 +2,15 @@ import 'dart:convert';
 
 import 'package:dentity/dentity.dart';
 import 'package:dentity/dentity_examples.dart';
+
 import 'package:dentity/src/entity/entity_serialiser_json.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'dentity_test.mocks.dart';
+
+@GenerateMocks([EntityManagerListener])
 void main() {
   group(
     'Test Functionality',
@@ -181,6 +187,27 @@ void main() {
         },
       );
 
+      test('test entity clone', () {
+        final world = createBasicExampleWorld();
+        final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
+        final entity2 = world.cloneEntity(entity1);
+        final position1 = world.getComponent<Position>(entity1);
+        final position2 = world.getComponent<Position>(entity2);
+        expect(position1?.x, position2?.x);
+        expect(position1?.y, position2?.y);
+        final velocity1 = world.getComponent<Velocity>(entity1);
+        final velocity2 = world.getComponent<Velocity>(entity2);
+        expect(velocity1?.x, velocity2?.x);
+        expect(velocity1?.y, velocity2?.y);
+        position1?.x = 10;
+        position1?.y = 10;
+        expect(position2, isNot(position1));
+        expect(position2?.x, 0);
+        expect(position2?.y, 0);
+        expect(position1?.x, 10);
+        expect(position1?.y, 10);
+      });
+
       test(
         'test view updates correctly',
         () {
@@ -218,6 +245,21 @@ void main() {
           expect(otherComponent, isNull);
         },
       );
+      test('Test Observers work correctly', () {
+        final world = createBasicExampleWorld();
+        final observer = MockEntityManagerListener();
+        world.entityManager.addObserver(observer);
+        final entity = world.createEntity({Position(0, 0), Velocity(1, 1)});
+
+        world.addComponents(entity, {OtherComponent()});
+        world.process();
+        world.destroyEntity(entity);
+        world.process();
+
+        verify(observer.onEntityCreated(entity)).called(1);
+        verify(observer.onEntityWillDestroy(entity)).called(1);
+        verify(observer.onEntityArchetypeChanged(entity, any, any)).called(1);
+      });
 
       test(
         'test entity factory creates entites correctly',
@@ -325,7 +367,7 @@ void main() {
         );
 
         final WorldSerialiser worldSerialiser = WorldSerialiserJson(
-          world.entityManager,
+          world,
           entitySerialiser,
         );
 

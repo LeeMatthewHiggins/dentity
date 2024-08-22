@@ -8,7 +8,17 @@ abstract class Component extends Object implements Comparable {
 
 typedef ComponentListFactory = SparseList<Component> Function();
 
-abstract class ComponentsReadOnlyInterface {
+abstract class ComponentManagerListener {
+  void onComponentAdded(Entity entity, Component component);
+  void onComponentWillRemove(Entity entity, Component component);
+  void onComponentReplaced(
+    Entity entity,
+    Component oldComponent,
+    Component newComponent,
+  );
+}
+
+abstract class ComponentManagerReadOnlyInterface {
   Iterable<Type> get componentTypes;
   T? getComponent<T extends Component>(Entity entity);
   Iterable<Component> getComponents(Entity entity);
@@ -20,18 +30,21 @@ abstract class ComponentsReadOnlyInterface {
   Map<Type, SparseList<Component>> componentsForArchetype(Archetype archetype);
 }
 
-abstract class ComponentsInterface extends ComponentsReadOnlyInterface {
+abstract class ComponentManagerInterface
+    extends ComponentManagerReadOnlyInterface {
   void addComponents(Entity entity, Iterable<Component> components);
   void removeAllComponents(Entity entity);
   void removeComponentsByType(Entity entity, Iterable<Type> componentTypes);
   void removeComponentByType<T extends Component>(Entity entity);
 }
 
-class ComponentManager implements ComponentsInterface {
+class ComponentManager
+    implements ComponentManagerInterface, ComponentManagerListener {
   final Map<Type, SparseList<Component>> _componentArrays = {};
   late final Map<Type, ComponentListFactory> _componentArrayFactories;
   late ArchetypeManagerInterface _archetypeManager;
   ArchetypeManagerInterface get archetypeManager => _archetypeManager;
+  final List<ComponentManagerListener> _observers = [];
 
   ComponentManager({
     Map<Type, ComponentListFactory> componentArrayFactories = const {},
@@ -112,13 +125,24 @@ class ComponentManager implements ComponentsInterface {
             'No factory found for component type ${component.runtimeType}');
       }
       final componentType = component.runtimeType;
+      final previousComponent = _componentArrays[componentType]?[entity];
       _componentArrays[componentType]?[entity] = component;
+      if (previousComponent != null) {
+        onComponentReplaced(entity, previousComponent, component);
+      } else {
+        onComponentAdded(entity, component);
+      }
     }
   }
 
   @override
   void removeAllComponents(Entity entity) {
     for (var componentArray in _componentArrays.values) {
+      final component = componentArray[entity];
+      if (component == null) {
+        continue;
+      }
+      onComponentWillRemove(entity, component);
       componentArray.remove(entity);
     }
   }
@@ -130,6 +154,11 @@ class ComponentManager implements ComponentsInterface {
       if (componentArray == null) {
         throw ArgumentError('Component type not found in entity ($entity)');
       }
+      final component = componentArray[entity];
+      if (component == null) {
+        continue;
+      }
+      onComponentWillRemove(entity, component);
       componentArray.remove(entity);
     }
   }
@@ -140,6 +169,40 @@ class ComponentManager implements ComponentsInterface {
     if (componentArray == null) {
       throw ArgumentError('Component type not found in entity ($entity)');
     }
+    final component = componentArray[entity];
+    if (component == null) {
+      return;
+    }
+    onComponentWillRemove(entity, component);
     componentArray.remove(entity);
+  }
+
+  @override
+  void onComponentAdded(Entity entity, Component component) {
+    for (var observer in _observers) {
+      observer.onComponentAdded(entity, component);
+    }
+  }
+
+  @override
+  void onComponentWillRemove(Entity entity, Component component) {
+    for (var observer in _observers) {
+      observer.onComponentWillRemove(entity, component);
+    }
+  }
+
+  @override
+  void onComponentReplaced(
+    Entity entity,
+    Component oldComponent,
+    Component newComponent,
+  ) {
+    for (var observer in _observers) {
+      observer.onComponentReplaced(
+        entity,
+        oldComponent,
+        newComponent,
+      );
+    }
   }
 }

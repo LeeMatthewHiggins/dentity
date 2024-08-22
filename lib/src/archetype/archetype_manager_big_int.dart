@@ -45,4 +45,10 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
   bool isSupertype(Archetype a, Archetype b) {
     return (a as BigInt) & (b as BigInt) == a;
   }
+
+  @override
+  bool matches(Iterable<Type> componentTypes) {
+    final archetype = getArchetype(componentTypes);
+    return archetype == getArchetype(componentTypes);
+  }
 }

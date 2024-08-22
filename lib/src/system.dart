@@ -2,7 +2,7 @@ import 'package:dentity/dentity.dart';
 
 abstract class System {
   late final EntityManager entityManager;
-  late final ComponentsReadOnlyInterface componentManager;
+  late final ComponentManagerReadOnlyInterface componentManager;
 
   void attach(EntityManager entityManager) {
     componentManager = entityManager.componentManager;

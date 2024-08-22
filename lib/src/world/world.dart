@@ -28,6 +28,8 @@ class World {
   T? getComponent<T extends Component>(Entity entity) =>
       _componentManager.getComponent<T>(entity);
 
+  int cloneEntity(Entity entity) => _entityManager.cloneEntity(entity);
+
   void addComponents(Entity entity, Iterable<Component> components) =>
       _entityManager.addComponents(entity, components);
   void removeComponents(Entity entity, Iterable<Type> componentTypes) =>

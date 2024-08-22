@@ -5,4 +5,5 @@ abstract class ArchetypeManagerInterface {
   Iterable<Type> getComponentTypes(Archetype archetype);
   bool isSubtype(Archetype a, Archetype b);
   bool isSupertype(Archetype a, Archetype b);
+  bool matches(Iterable<Type> componentTypes);
 }

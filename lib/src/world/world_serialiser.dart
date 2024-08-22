@@ -6,10 +6,8 @@ abstract class WorldSerialiser {
   final EntityManager _entityManager;
   final EntitySerialiser _entitySerialiser;
 
-  WorldSerialiser(
-    this._entityManager,
-    this._entitySerialiser,
-  );
+  WorldSerialiser(World world, this._entitySerialiser)
+      : _entityManager = world.entityManager;
 
   Iterable<Entity> deserialize(WorldRepresentation data) {
     final entitiesRepresentations = deserializeEntities(data);
