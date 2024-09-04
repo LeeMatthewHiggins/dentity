@@ -379,15 +379,15 @@ void main() {
 
         final first = jsonMap[WorldSerialiserJson.entitiesField].first;
 
-        expect(first[EntitySerialiserJson.componentsField], isList);
+        expect(first[EntitySerialiserJson.componentsField], isMap);
         final components =
-            first[EntitySerialiserJson.componentsField] as List<dynamic>;
-        expect(components.first, isMap);
-        final position = components.first as Map<String, dynamic>;
+            first[EntitySerialiserJson.componentsField] as Map<String, Object>;
+        expect(components, isMap);
+        final position = components['Position'] as Map<String, dynamic>;
         expect(position['x'], 0);
         expect(position['y'], 0);
-        expect(components[1], isMap);
-        final velocity = components[1] as Map<String, dynamic>;
+        expect(components['Velocity'], isMap);
+        final velocity = components['Velocity'] as Map<String, dynamic>;
         expect(velocity['x'], 10);
         expect(velocity['y'], 10);
 
