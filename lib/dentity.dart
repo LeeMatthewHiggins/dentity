@@ -6,6 +6,7 @@ export 'src/entity/entity.dart';
 export 'src/entity/entity_view.dart';
 export 'src/entity/entity_factory.dart';
 export 'src/entity/entity_serialiser.dart';
+export 'src/entity/entity_serialiser_json.dart';
 export 'src/sparse_list/sparse_list.dart';
 export 'src/sparse_list/contiguous_sparse_list.dart';
 export 'src/sparse_list/simple_sparse_list.dart';

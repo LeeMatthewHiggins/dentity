@@ -1,5 +1,4 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/src/entity/entity_serialiser_json.dart';
 
 class Position extends Component {
   double x;
