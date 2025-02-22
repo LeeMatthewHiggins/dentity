@@ -13,3 +13,7 @@
 ## 1.1.2
 
 - Add component deserialisation method to entity serialiser.
+
+## 1.1.3
+
+- Add system get method to world.

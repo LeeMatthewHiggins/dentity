@@ -4,7 +4,7 @@ class World {
   EntityManager get entityManager => _entityManager;
   final EntityManager _entityManager;
   final ComponentManager _componentManager;
-  final List<EntitySystem> _systems;
+  final List<System> _systems;
 
   World(
     this._componentManager,
@@ -35,6 +35,9 @@ class World {
   void removeComponents(Entity entity, Iterable<Type> componentTypes) =>
       _entityManager.removeComponents(entity, componentTypes);
   void destroyEntity(Entity entity) => _entityManager.destroyEntity(entity);
+
+  T? getSystem<T extends System>() =>
+      _systems.firstWhere((system) => system is T) as T?;
 }
 
 extension EntityViewOnWorld on World {
