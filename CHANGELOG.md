@@ -9,3 +9,7 @@
 ## 1.1.1
 
 - Add the entity serialiser json.
+
+## 1.1.2
+
+- Add component deserialisation method to entity serialiser.

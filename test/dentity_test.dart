@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:dentity/dentity.dart';
 import 'package:dentity/dentity_examples.dart';
 
-import 'package:dentity/src/entity/entity_serialiser_json.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
