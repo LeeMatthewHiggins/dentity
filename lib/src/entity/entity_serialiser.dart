@@ -31,9 +31,16 @@ abstract class EntitySerialiser {
   );
 
   Entity deserializeEntity(EntityRepresentation data) {
-    final components = deserializeEntityComponents(data);
     return _entityManager.createEntity(
-      _componentsSerializer.deserializeComponents(components),
+      deserializeComponents(data),
+    );
+  }
+
+  Iterable<Component> deserializeComponents(
+    EntityRepresentation data,
+  ) {
+    return _componentsSerializer.deserializeComponents(
+      deserializeEntityComponents(data),
     );
   }
 }
