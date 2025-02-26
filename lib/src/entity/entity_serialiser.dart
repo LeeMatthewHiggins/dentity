@@ -4,21 +4,22 @@ typedef EntityRepresentation = Object;
 
 abstract class EntitySerialiser {
   final EntityManager _entityManager;
-  late final EntityComponentsSerializer _componentsSerializer;
+  late final EntityComponentsSerializer componentsSerializer;
 
   EntitySerialiser(
     this._entityManager,
     Map<Type, ComponentSerializer> serializers,
   ) {
-    _componentsSerializer = EntityComponentsSerializer(
-      _entityManager.componentManager,
+    componentsSerializer = EntityComponentsSerializer(
       serializers,
     );
   }
 
   EntityRepresentation serializeEntity(Entity entity) {
-    final components = _componentsSerializer.serializeComponents(entity);
-    return serializeEntityComponents(entity, components);
+    final components = _entityManager.componentManager.getComponents(entity);
+    final serialisedComponents =
+        componentsSerializer.serializeComponents(components);
+    return serializeEntityComponents(entity, serialisedComponents);
   }
 
   EntityRepresentation serializeEntityComponents(
@@ -31,16 +32,9 @@ abstract class EntitySerialiser {
   );
 
   Entity deserializeEntity(EntityRepresentation data) {
-    return _entityManager.createEntity(
-      deserializeComponents(data),
-    );
-  }
-
-  Iterable<Component> deserializeComponents(
-    EntityRepresentation data,
-  ) {
-    return _componentsSerializer.deserializeComponents(
+    final components = componentsSerializer.deserializeComponents(
       deserializeEntityComponents(data),
     );
+    return _entityManager.createEntity(components);
   }
 }

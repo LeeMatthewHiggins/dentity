@@ -10,10 +10,9 @@ abstract class ComponentSerializer<T> {
 }
 
 class EntityComponentsSerializer {
-  final ComponentManager _componentManager;
   final Map<Type, ComponentSerializer> _serializers;
 
-  EntityComponentsSerializer(this._componentManager, this._serializers);
+  EntityComponentsSerializer(this._serializers);
 
   ComponentRepresentation? serializeComponent(Component component) {
     final serializer = _serializers[component.runtimeType];
@@ -23,8 +22,8 @@ class EntityComponentsSerializer {
     return serializer.serialize(component);
   }
 
-  Iterable<ComponentRepresentation> serializeComponents(Entity entity) {
-    final components = _componentManager.getComponents(entity);
+  Iterable<ComponentRepresentation> serializeComponents(
+      Iterable<Component> components) {
     return components
         .map(serializeComponent)
         .where((c) => c != null)

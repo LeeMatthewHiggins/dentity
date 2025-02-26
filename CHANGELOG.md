@@ -17,3 +17,8 @@
 ## 1.1.3
 
 - Add system get method to world.
+
+## 1.2.0
+
+- expose the component serialiser to the world.
+- remove the need to pass the entity manager to the component serialiser.
