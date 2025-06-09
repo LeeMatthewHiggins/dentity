@@ -1,9 +1,6 @@
 import 'dart:math'; // For cos, sin, Random, pow, pi
 
 import 'package:dentity/dentity.dart';
-import 'package:dentity/src/component/component_serialiser.dart';
-import 'package:dentity/src/entity/entity_serialiser_json.dart';
-// Entity is already exported by dentity.dart
 
 // --- Core Components ---
 
@@ -149,7 +146,8 @@ class Collider extends Component {
 
   @override
   Collider clone() {
-    return Collider(radius, collidesWith: Set<Type>.from(collidesWith), onCollide: onCollide);
+    return Collider(radius,
+        collidesWith: Set<Type>.from(collidesWith), onCollide: onCollide);
   }
 
   @override
@@ -189,7 +187,6 @@ class Collider extends Component {
     return -1;
   }
 }
-
 
 // --- Tag Components ---
 
@@ -235,8 +232,8 @@ class Bullet extends Component {
   int get hashCode => runtimeType.hashCode ^ owner.hashCode;
   @override
   int compareTo(other) {
-     if (other is Bullet) {
-      return owner.id.compareTo(other.owner.id);
+    if (other is Bullet) {
+      return owner.compareTo(other.owner);
     }
     return -1;
   }
@@ -275,256 +272,6 @@ class Health extends Component {
   }
 }
 
-// --- Component Serializers ---
-
-class TransformJsonSerializer extends ComponentSerializer<Transform> {
-  static const type = 'Transform';
-  @override
-  ComponentRepresentation? serialize(Transform component) {
-    return {
-      'x': component.x,
-      'y': component.y,
-      'rotation': component.rotation,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Transform deserialize(ComponentRepresentation data) {
-    final transformData = data as Map<String, dynamic>;
-    return Transform(
-      transformData['x'] as double,
-      transformData['y'] as double,
-      rotation: transformData['rotation'] as double,
-    );
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Transform;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class VelocityJsonSerializer extends ComponentSerializer<Velocity> {
-  static const type = 'Velocity';
-  @override
-  ComponentRepresentation? serialize(Velocity component) {
-    return {
-      'x': component.x,
-      'y': component.y,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Velocity deserialize(ComponentRepresentation data) {
-    final velocityData = data as Map<String, dynamic>;
-    return Velocity(
-      velocityData['x'] as double,
-      velocityData['y'] as double,
-    );
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Velocity;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class RenderableJsonSerializer extends ComponentSerializer<Renderable> {
-  static const type = 'Renderable';
-  @override
-  ComponentRepresentation? serialize(Renderable component) {
-    return {
-      'shape': component.shape,
-      'color': component.color,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Renderable deserialize(ComponentRepresentation data) {
-    final renderableData = data as Map<String, dynamic>;
-    return Renderable(
-      renderableData['shape'] as String,
-      renderableData['color'] as String,
-    );
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Renderable;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class MassJsonSerializer extends ComponentSerializer<Mass> {
-  static const type = 'Mass';
-  @override
-  ComponentRepresentation? serialize(Mass component) {
-    return {
-      'value': component.value,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Mass deserialize(ComponentRepresentation data) {
-    final massData = data as Map<String, dynamic>;
-    return Mass(massData['value'] as double);
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Mass;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class ColliderJsonSerializer extends ComponentSerializer<Collider> {
-  static const type = 'Collider';
-  @override
-  ComponentRepresentation? serialize(Collider component) {
-    return {
-      'radius': component.radius,
-      'collidesWith': component.collidesWith.map((t) => t.toString()).toList(),
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Collider deserialize(ComponentRepresentation data) {
-    final colliderData = data as Map<String, dynamic>;
-    Set<Type> collidesWithTypes = (colliderData['collidesWith'] as List)
-        .map((typeName) {
-          // This is a simplified mapping. A robust solution needs a type registry.
-          if (typeName == (Player).toString()) return Player;
-          if (typeName == (Asteroid).toString()) return Asteroid;
-          if (typeName == (Bullet).toString()) return Bullet;
-          // Add other types if needed or use a more generic mapping solution.
-          return Component; // Fallback
-        })
-        .toSet();
-    return Collider(
-      colliderData['radius'] as double,
-      collidesWith: collidesWithTypes,
-      // onCollide would be re-established here, possibly via a lookup if serialized as an identifier.
-    );
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Collider;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class PlayerJsonSerializer extends ComponentSerializer<Player> {
-  static const type = 'Player';
-  @override
-  ComponentRepresentation? serialize(Player component) {
-    return {EntitySerialiserJson.typeField: type};
-  }
-
-  @override
-  Player deserialize(ComponentRepresentation data) {
-    return Player();
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Player;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class AsteroidJsonSerializer extends ComponentSerializer<Asteroid> {
-  static const type = 'Asteroid';
-  @override
-  ComponentRepresentation? serialize(Asteroid component) {
-    return {
-      'size': component.size,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Asteroid deserialize(ComponentRepresentation data) {
-    final asteroidData = data as Map<String, dynamic>;
-    return Asteroid(size: asteroidData['size'] as String);
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Asteroid;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class BulletJsonSerializer extends ComponentSerializer<Bullet> {
-  static const type = 'Bullet';
-  @override
-  ComponentRepresentation? serialize(Bullet component) {
-    return {
-      'ownerId': component.owner.id,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Bullet deserialize(ComponentRepresentation data) {
-    final bulletData = data as Map<String, dynamic>;
-    return Bullet(Entity(bulletData['ownerId'] as int));
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Bullet;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-class HealthJsonSerializer extends ComponentSerializer<Health> {
-  static const type = 'Health';
-  @override
-  ComponentRepresentation? serialize(Health component) {
-    return {
-      'currentLives': component.currentLives,
-      'maxLives': component.maxLives,
-      EntitySerialiserJson.typeField: type
-    };
-  }
-
-  @override
-  Health deserialize(ComponentRepresentation data) {
-    final healthData = data as Map<String, dynamic>;
-    return Health(
-      currentLives: healthData['currentLives'] as int,
-      maxLives: healthData['maxLives'] as int,
-    );
-  }
-
-  @override
-  bool canSerialize(Object component) => component is Health;
-  @override
-  bool canDeserialize(ComponentRepresentation data) =>
-      data is Map<String, dynamic> && data[EntitySerialiserJson.typeField] == type;
-}
-
-final asteroidsComponentSerializers = <ComponentSerializer>[
-  TransformJsonSerializer(),
-  VelocityJsonSerializer(),
-  RenderableJsonSerializer(),
-  PlayerJsonSerializer(),
-  AsteroidJsonSerializer(),
-  BulletJsonSerializer(),
-  HealthJsonSerializer(),
-  MassJsonSerializer(),
-  ColliderJsonSerializer(), // Added ColliderJsonSerializer
-];
-
 // --- Game Systems ---
 
 class PlayerInputSystem extends EntitySystem {
@@ -532,14 +279,14 @@ class PlayerInputSystem extends EntitySystem {
   bool isRotatingLeft = false;
   bool isRotatingRight = false;
   bool isShooting = false;
+  Entity playerEntity;
 
   double accelerationPower = 0.1;
   double rotationSpeed = 0.05;
   // double bulletSpeed = 5.0; // Bullet speed is now handled by createAsteroidsWorld
 
   World world;
-  PlayerInputSystem(this.world); // Modified constructor
-
+  PlayerInputSystem(this.world, this.playerEntity); // Modified constructor
 
   @override
   Set<Type> get filterTypes => const {Player, Transform, Velocity, Health};
@@ -571,27 +318,28 @@ class PlayerInputSystem extends EntitySystem {
     }
 
     if (isShooting) {
-       final playerHealthCheck = componentLists[Health]?[entity] as Health?;
+      final playerHealthCheck = componentLists[Health]?[entity] as Health?;
       if (playerHealthCheck == null || playerHealthCheck.currentLives <= 0) {
-         isShooting = false; // Don't shoot if dead
-         return;
+        isShooting = false; // Don't shoot if dead
+        return;
       }
 
       // Create a bullet entity
-      final bulletX = transform.x + cos(transform.rotation) * 15; // Spawn slightly ahead of player
+      final bulletX = transform.x +
+          cos(transform.rotation) * 15; // Spawn slightly ahead of player
       final bulletY = transform.y + sin(transform.rotation) * 15;
       const bulletSpeedValue = 5.0; // Actual bullet speed
 
-      final bulletEntity = world.createEntity();
-      world.addComponent(bulletEntity, Bullet(entity)); // Pass player entity as owner
-      world.addComponent(bulletEntity, Transform(bulletX, bulletY, rotation: transform.rotation));
-      world.addComponent(bulletEntity, Velocity(
-        cos(transform.rotation) * bulletSpeedValue,
-        sin(transform.rotation) * bulletSpeedValue
-      ));
-      world.addComponent(bulletEntity, Renderable("circle_small", "yellow")); // Smaller circle for bullet
-      world.addComponent(bulletEntity, Mass(0.1));
-      world.addComponent(bulletEntity, Collider(2.0, collidesWith: {Asteroid}, onCollide: handleBulletCollision));
+      world.createEntity([
+        Bullet(playerEntity),
+        Transform(bulletX, bulletY, rotation: transform.rotation),
+        Velocity(cos(transform.rotation) * bulletSpeedValue,
+            sin(transform.rotation) * bulletSpeedValue),
+        Renderable("circle_small", "yellow"),
+        Mass(0.1),
+        Collider(2.0,
+            collidesWith: {Asteroid}, onCollide: handleBulletCollision),
+      ]);
 
       // print("Player ${entity.id} shot bullet ${bulletEntity.id}");
       isShooting = false;
@@ -607,20 +355,25 @@ class PlayerInputSystem extends EntitySystem {
 void handleBulletCollision(Entity bullet, Entity other, World world) {
   // Bullet specific collision: e.g. just remove self
   // Asteroid collision logic is handled by its own onCollide
-  if (world.hasComponent<Asteroid>(other)) {
+  if (world.entityManager.hasEntity(other) &&
+      world.getComponent<Asteroid>(other) != null) {
     // print("Bullet ${bullet.id} hit Asteroid ${other.id}. Bullet removed.");
-    world.removeEntity(bullet);
+    world.destroyEntity(bullet);
   }
 }
-
 
 class GravitySystem extends EntitySystem {
   final double gravitationalConstant;
 
-  GravitySystem({this.gravitationalConstant = 0.0}); // Defaulting to 0 for asteroids, can be set otherwise
+  GravitySystem(
+      {this.gravitationalConstant =
+          0.0}); // Defaulting to 0 for asteroids, can be set otherwise
 
   @override
-  Set<Type> get filterTypes => const {Velocity, Mass}; // Transform no longer needed for simple Y-axis gravity
+  Set<Type> get filterTypes => const {
+        Velocity,
+        Mass
+      }; // Transform no longer needed for simple Y-axis gravity
 
   @override
   void processEntity(
@@ -643,7 +396,8 @@ class MovementSystem extends EntitySystem {
   final double worldHeight;
   final bool wrapAround;
 
-  MovementSystem({this.worldWidth = 800, this.worldHeight = 600, this.wrapAround = true});
+  MovementSystem(
+      {this.worldWidth = 800, this.worldHeight = 600, this.wrapAround = true});
 
   @override
   Set<Type> get filterTypes => const {Transform, Velocity};
@@ -698,10 +452,11 @@ class CollisionSystem extends EntitySystem {
 
     // Query all entities that could collide (have Transform and Collider)
     // This approach is simpler than iterating all entities in the world if queryEntities is efficient.
-    final potentialColliders = world.queryEntities(filterTypes);
+    final potentialColliders = world.viewForTypes(filterTypes);
 
     for (final entityB in potentialColliders) {
-      if (entityA.id >= entityB.id) continue; // Avoid self-collision and duplicate pairs (A-B is same as B-A)
+      if (entityA >= entityB)
+        continue; // Avoid self-collision and duplicate pairs (A-B is same as B-A)
 
       // String pairKey = '${entityA.id}-${entityB.id}'; // Ensured by A.id < B.id check
       // if (_processedPairs.contains(pairKey)) continue; // Already handled by A.id < B.id
@@ -711,13 +466,16 @@ class CollisionSystem extends EntitySystem {
 
       if (transformB == null || colliderB == null) continue;
 
-      bool canACollideWithBType = colliderA.collidesWith.any((type) => world.hasComponent(entityB, type));
-      bool canBCollideWithTypeA = colliderB.collidesWith.any((type) => world.hasComponent(entityA, type));
+      bool canACollideWithBType = colliderA.collidesWith
+          .any((type) => world.hasComponent(entityB, type));
+      bool canBCollideWithTypeA = colliderB.collidesWith
+          .any((type) => world.hasComponent(entityA, type));
 
       if (!canACollideWithBType || !canBCollideWithTypeA) continue;
 
-      double distanceSq = pow(transformA.x - transformB.x, 2) + pow(transformA.y - transformB.y, 2);
-      double radiiSumSq = pow(colliderA.radius + colliderB.radius, 2);
+      double distanceSq = (transformA.x - transformB.x).pow(2) +
+          (transformA.y - transformB.y).pow(2);
+      double radiiSumSq = (colliderA.radius + colliderB.radius).pow(2);
 
       if (distanceSq < radiiSumSq) {
         // Collision detected!
@@ -725,12 +483,12 @@ class CollisionSystem extends EntitySystem {
 
         // Invoke callbacks. The world is passed to allow for entity creation/deletion.
         colliderA.onCollide?.call(entityA, entityB, world);
-        colliderB.onCollide?.call(entityB, entityA, world); // Call B's handler as well
+        colliderB.onCollide
+            ?.call(entityB, entityA, world); // Call B's handler as well
       }
     }
   }
 }
-
 
 class AsteroidSpawnSystem extends EntitySystem {
   double spawnInterval;
@@ -741,7 +499,10 @@ class AsteroidSpawnSystem extends EntitySystem {
   final double worldWidth;
   final double worldHeight;
 
-  AsteroidSpawnSystem(this.world, {this.spawnInterval = 5.0, this.worldWidth = 800, this.worldHeight = 600});
+  AsteroidSpawnSystem(this.world,
+      {this.spawnInterval = 5.0,
+      this.worldWidth = 800,
+      this.worldHeight = 600});
 
   @override
   Set<Type> get filterTypes => const {};
@@ -759,46 +520,56 @@ class AsteroidSpawnSystem extends EntitySystem {
     double x, y;
     double vx, vy;
     // Speed in units per second, will be scaled by time in MovementSystem
-    double speed = (random.nextDouble() * 0.5 + 0.5) * 2.0; // Adjusted for ~60fps, results in 0.5 to 1.0 units per frame scaled by time.
+    double speed = (random.nextDouble() * 0.5 + 0.5) *
+        2.0; // Adjusted for ~60fps, results in 0.5 to 1.0 units per frame scaled by time.
 
     if (random.nextBool()) {
       x = random.nextBool() ? -30.0 : worldWidth + 30.0; // Spawn off-screen
       y = random.nextDouble() * worldHeight;
-      vx = (x < worldWidth / 2 ? 1 : -1) * speed * (random.nextDouble() * 0.5 + 0.5);
+      vx = (x < worldWidth / 2 ? 1 : -1) *
+          speed *
+          (random.nextDouble() * 0.5 + 0.5);
       vy = (random.nextDouble() - 0.5) * speed;
     } else {
       y = random.nextBool() ? -30.0 : worldHeight + 30.0; // Spawn off-screen
       x = random.nextDouble() * worldWidth;
-      vy = (y < worldHeight / 2 ? 1 : -1) * speed * (random.nextDouble() * 0.5 + 0.5);
+      vy = (y < worldHeight / 2 ? 1 : -1) *
+          speed *
+          (random.nextDouble() * 0.5 + 0.5);
       vx = (random.nextDouble() - 0.5) * speed;
     }
 
-    final asteroidEntity = world.createEntity();
-    world.addComponent(asteroidEntity, Asteroid(size: "large"));
-    world.addComponent(asteroidEntity, Transform(x, y, rotation: random.nextDouble() * 2 * pi));
-    world.addComponent(asteroidEntity, Velocity(vx, vy)); // Store as per-second, Movement system will scale
-    world.addComponent(asteroidEntity, Mass(30.0));
-    world.addComponent(asteroidEntity, Renderable("polygon_asteroid_large", "grey")); // Unique shape for large
-    world.addComponent(asteroidEntity, Collider(30.0, collidesWith: {Player, Bullet}, onCollide: handleAsteroidCollision));
+    world.createEntity([
+      Asteroid(size: "large"),
+      Transform(x, y, rotation: random.nextDouble() * 2 * pi),
+      Velocity(vx, vy),
+      Mass(30.0),
+      Renderable("polygon_asteroid_large", "grey"),
+      Collider(30.0,
+          collidesWith: {Player, Bullet}, onCollide: handleAsteroidCollision),
+    ]);
   }
 
   @override
-  void processEntity(Entity entity, Map<Type, SparseList<Component>> componentLists, Duration delta) {
+  void processEntity(Entity entity,
+      Map<Type, SparseList<Component>> componentLists, Duration delta) {
     // Not used
   }
 }
 
-void handleAsteroidCollision(Entity asteroidEntity, Entity otherEntity, World world) {
+void handleAsteroidCollision(
+    Entity asteroidEntity, Entity otherEntity, World world) {
   // This function is the callback for Asteroid's Collider component.
   // It defines what happens *to the asteroid* when it collides.
 
   final asteroidComponent = world.getComponent<Asteroid>(asteroidEntity);
-  if (asteroidComponent == null) return; // Should not happen if called on an asteroid
+  if (asteroidComponent == null)
+    return; // Should not happen if called on an asteroid
 
-  if (world.hasComponent<Bullet>(otherEntity)) {
+  if (world.getComponent<Bullet>(otherEntity) != null) {
     // Asteroid hit by a bullet
     // print("Asteroid ${asteroidEntity.id} (size: ${asteroidComponent.size}) hit by Bullet ${otherEntity.id}");
-    world.removeEntity(asteroidEntity); // Destroy this asteroid
+    world.destroyEntity(asteroidEntity); // Destroy this asteroid
     // The bullet's onCollide (handleBulletCollision) will handle removing the bullet.
 
     // Spawn smaller asteroids based on current asteroid's size
@@ -810,16 +581,15 @@ void handleAsteroidCollision(Entity asteroidEntity, Entity otherEntity, World wo
         _spawnSmallerAsteroid(world, parentTransform, "medium");
       }
     } else if (asteroidComponent.size == "medium") {
-       for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 2; i++) {
         _spawnSmallerAsteroid(world, parentTransform, "small");
       }
     }
     // Small asteroids, when hit by a bullet, are just destroyed (no smaller ones spawn).
-
-  } else if (world.hasComponent<Player>(otherEntity)) {
+  } else if (world.getComponent<Player>(otherEntity) != null) {
     // Asteroid collided with Player
     // print("Asteroid ${asteroidEntity.id} collided with Player ${otherEntity.id}");
-    world.removeEntity(asteroidEntity); // Destroy the asteroid
+    world.destroyEntity(asteroidEntity); // Destroy the asteroid
 
     // Player's health component and its own collision handler (if any) would manage player damage.
     // For direct damage from asteroid:
@@ -836,7 +606,8 @@ void handleAsteroidCollision(Entity asteroidEntity, Entity otherEntity, World wo
   }
 }
 
-void _spawnSmallerAsteroid(World world, Transform parentTransform, String newSize) {
+void _spawnSmallerAsteroid(
+    World world, Transform parentTransform, String newSize) {
   Random random = Random();
   double baseSpeed = 0.0; // Per-frame, assuming 60fps scaling in movement
   double radius = 0;
@@ -844,12 +615,12 @@ void _spawnSmallerAsteroid(World world, Transform parentTransform, String newSiz
   String renderShape = "polygon_asteroid_default";
 
   if (newSize == "medium") {
-    baseSpeed = 1.2 * (1/60.0) ; // Adjusted for 60fps scaling
+    baseSpeed = 1.2 * (1 / 60.0); // Adjusted for 60fps scaling
     radius = 15.0;
     mass = 15.0;
     renderShape = "polygon_asteroid_medium";
   } else if (newSize == "small") {
-    baseSpeed = 1.5 * (1/60.0); // Adjusted for 60fps scaling
+    baseSpeed = 1.5 * (1 / 60.0); // Adjusted for 60fps scaling
     radius = 8.0;
     mass = 7.0;
     renderShape = "polygon_asteroid_small";
@@ -858,21 +629,25 @@ void _spawnSmallerAsteroid(World world, Transform parentTransform, String newSiz
   }
 
   for (int i = 0; i < 2; i++) {
-    final newAsteroid = world.createEntity();
     double angle = random.nextDouble() * 2 * pi;
     // Velocity is per-second, MovementSystem will scale by delta.
-    double speedMagnitude = baseSpeed * 60 * (random.nextDouble() * 0.5 + 0.75); // Make them a bit faster
+    double speedMagnitude = baseSpeed *
+        60 *
+        (random.nextDouble() * 0.5 + 0.75); // Make them a bit faster
+    world.createEntity([
+      Asteroid(size: newSize),
+      Transform(parentTransform.x, parentTransform.y,
+          rotation: random.nextDouble() * 2 * pi),
+      Velocity(cos(angle) * speedMagnitude, sin(angle) * speedMagnitude),
+      Mass(mass),
+      Renderable(renderShape, "grey"),
+      Collider(radius,
+          collidesWith: {Player, Bullet}, onCollide: handleAsteroidCollision),
+    ]);
 
-    world.addComponent(newAsteroid, Asteroid(size: newSize));
-    world.addComponent(newAsteroid, Transform(parentTransform.x, parentTransform.y, rotation: random.nextDouble() * 2 * pi));
-    world.addComponent(newAsteroid, Velocity(cos(angle) * speedMagnitude, sin(angle) * speedMagnitude));
-    world.addComponent(newAsteroid, Mass(mass));
-    world.addComponent(newAsteroid, Renderable(renderShape, "grey"));
-    world.addComponent(newAsteroid, Collider(radius, collidesWith: {Player, Bullet}, onCollide: handleAsteroidCollision));
     // print("Spawned smaller asteroid ${newAsteroid.id} (size: $newSize)");
   }
 }
-
 
 class BulletLifecycleSystem extends EntitySystem {
   double maxLifetime;
@@ -882,7 +657,8 @@ class BulletLifecycleSystem extends EntitySystem {
   final double worldWidth;
   final double worldHeight;
 
-  BulletLifecycleSystem(this.world, {this.maxLifetime = 2.0, this.worldWidth = 800, this.worldHeight = 600});
+  BulletLifecycleSystem(this.world,
+      {this.maxLifetime = 2.0, this.worldWidth = 800, this.worldHeight = 600});
 
   @override
   Set<Type> get filterTypes => const {Bullet, Transform};
@@ -903,20 +679,23 @@ class BulletLifecycleSystem extends EntitySystem {
       shouldRemove = true;
     } else if (transform != null) {
       // Remove if bullet is well off-screen
-      if (transform.x < -50 || transform.x > worldWidth + 50 || transform.y < -50 || transform.y > worldHeight + 50) {
+      if (transform.x < -50 ||
+          transform.x > worldWidth + 50 ||
+          transform.y < -50 ||
+          transform.y > worldHeight + 50) {
         shouldRemove = true;
       }
     }
 
     if (shouldRemove) {
-      world.removeEntity(entity);
+      world.destroyEntity(entity);
       // bulletAge.remove(entity) will be handled by onEntityRemoved
       // print("Bullet ${entity.id} removed.");
     }
   }
 
   @override
-  void onEntityRemoved(Entity entity) {
+  void onEntityWillDestroy(Entity entity) {
     bulletAge.remove(entity);
   }
 }
