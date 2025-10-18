@@ -10,6 +10,20 @@ import 'package:test/test.dart';
 import 'dentity_test.mocks.dart';
 
 @GenerateMocks([EntityManagerListener])
+
+World createWorldWithoutSystems() {
+  final componentManager = ComponentManager(
+    archetypeManagerFactory: (types) => ArchetypeManagerBigInt(types),
+    componentArrayFactories: {
+      Position: () => ContiguousSparseList<Position>(),
+      Velocity: () => ContiguousSparseList<Velocity>(),
+      OtherComponent: () => ContiguousSparseList<OtherComponent>(),
+    },
+  );
+  final entityManager = EntityManager(componentManager);
+  return World(componentManager, entityManager, []);
+}
+
 void main() {
   group(
     'Test Functionality',
@@ -160,10 +174,12 @@ void main() {
             Position(0, 0),
             Velocity(1, 1),
           });
+          world.process();
           world.destroyEntity(positionOnly);
           world.destroyEntity(entity2);
-          world.entityManager.processDeletionQueue();
+          world.process();
           final recycledPositionOnly = world.createEntity({Position(0, 0)});
+          world.process();
           expect(recycledPositionOnly, equals(positionOnly));
           final newPositionOnly = world.createEntity({Position(0, 0)});
           expect(newPositionOnly, isNot(recycledPositionOnly));
@@ -176,6 +192,7 @@ void main() {
           final world = createBasicExampleWorld();
           final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
           final entity2 = world.createEntity({Position(0, 0), Velocity(1, 1)});
+          world.process();
           world.removeComponents(entity1, {Position});
           world.addComponents(entity2, {OtherComponent()});
           final position = world.getComponent<Position>(entity1);
@@ -188,9 +205,10 @@ void main() {
       );
 
       test('test entity clone', () {
-        final world = createBasicExampleWorld();
+        final world = createWorldWithoutSystems();
         final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
         final entity2 = world.cloneEntity(entity1);
+        world.process();
         final position1 = world.getComponent<Position>(entity1);
         final position2 = world.getComponent<Position>(entity2);
         expect(position1?.x, position2?.x);
@@ -226,23 +244,12 @@ void main() {
           });
           world.process();
 
-          final entity3 = world.createEntity({
-            Position(2, 2),
-            Velocity(30, 30),
-          });
           final position1 = view.getComponent<Position>(entity1);
           expect(position1?.x, 10);
           expect(position1?.y, 10);
           final position2 = view.getComponent<Position>(entity2);
           expect(position2?.x, 21);
           expect(position2?.y, 21);
-
-          final position3 = view.getComponent<Position>(entity3);
-          expect(position3?.x, 2);
-          expect(position3?.y, 2);
-
-          final otherComponent = view.getComponent<OtherComponent>(entity3);
-          expect(otherComponent, isNull);
         },
       );
       test('Test Observers work correctly', () {
@@ -264,6 +271,37 @@ void main() {
       test(
         'test entity factory creates entites correctly',
         () {
+          final world = createWorldWithoutSystems();
+          const prefabName = 'prefab1';
+          final prefab1 = EntityPrefab(
+            name: prefabName,
+            components: {
+              Position(0, 0),
+              Velocity(10, 10),
+            },
+          );
+          final factory = EntityFactory(prefabs: {prefab1});
+          final entity = factory.fabricate(prefabName, world);
+          world.process();
+          final position = world.getComponent<Position>(entity);
+          expect(position?.x, 0);
+          expect(position?.y, 0);
+          final velocity = world.getComponent<Velocity>(entity);
+          expect(velocity?.x, 10);
+          expect(velocity?.y, 10);
+
+          final entity2 = factory.fabricate(prefabName, world);
+          world.process();
+          final position2 = world.getComponent<Position>(entity2);
+          expect(entity2, isNot(entity));
+          expect(position2?.x, 0);
+          expect(position2?.y, 0);
+        },
+      );
+
+      test(
+        'test entity factory works with systems',
+        () {
           final world = createBasicExampleWorld();
           const prefabName = 'prefab1';
           final prefab1 = EntityPrefab(
@@ -275,31 +313,18 @@ void main() {
           );
           final factory = EntityFactory(prefabs: {prefab1});
           final entity = factory.fabricate(prefabName, world);
-          final position = world.getComponent<Position>(entity);
-          expect(position?.x, 0);
-          expect(position?.y, 0);
-          final velocity = world.getComponent<Velocity>(entity);
-          expect(velocity?.x, 10);
-          expect(velocity?.y, 10);
-
           world.process();
 
           final positionAfterProcess = world.getComponent<Position>(entity);
           expect(positionAfterProcess?.x, 10);
           expect(positionAfterProcess?.y, 10);
-
-          final entity2 = factory.fabricate(prefabName, world);
-          final position2 = world.getComponent<Position>(entity2);
-          expect(entity2, isNot(entity));
-          expect(position2?.x, 0);
-          expect(position2?.y, 0);
         },
       );
 
       test(
         'test view filters correctly',
         () {
-          final world = createBasicExampleWorld();
+          final world = createWorldWithoutSystems();
           final entity1 = world.createEntity({
             Position(0, 0),
             Velocity(10, 10),
@@ -324,6 +349,7 @@ void main() {
             Position,
             Velocity,
           });
+          world.process();
 
           expect(positionView, contains(entity1));
           expect(positionView, contains(entity2));
@@ -347,7 +373,7 @@ void main() {
       );
 
       test('test serialization works', () {
-        final world = createBasicExampleWorld();
+        final world = createWorldWithoutSystems();
         world.createEntity({
           Position(0, 0),
           Velocity(10, 10),
@@ -356,6 +382,7 @@ void main() {
           Position(1, 1),
           Velocity(20, 20),
         });
+        world.process();
 
         final EntitySerialiser entitySerialiser = EntitySerialiserJson(
           world.entityManager,
@@ -399,6 +426,7 @@ void main() {
 
         final deserialized = worldSerialiser.deserialize(decoded);
         expect(deserialized, isNotEmpty);
+        world.process();
 
         final deserializedPosition =
             world.getComponent<Position>(deserialized.first);

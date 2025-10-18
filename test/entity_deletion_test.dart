@@ -370,6 +370,7 @@ void main() {
         Position(100, 100),
         Health(100),
       });
+      world.process();
 
       expect(recycledEntity, equals(entity1));
       expect(world.getComponent<Position>(recycledEntity), isNotNull);
@@ -412,7 +413,7 @@ void main() {
 
       final entity1 = world.createEntity({
         Position(0, 0),
-        Health(0),
+        Health(100),
       });
       final entity2 = world.createEntity({
         Position(10, 10),
@@ -420,8 +421,12 @@ void main() {
       });
 
       final view = world.viewForTypes({Position});
+      world.process();
       final initialCount = view.length;
       expect(initialCount, equals(2));
+
+      final health1 = world.getComponent<Health>(entity1);
+      health1?.hp = 0;
 
       world.process();
 

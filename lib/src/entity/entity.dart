@@ -23,6 +23,7 @@ class EntityManager implements EntityManagerListener {
   final Map<Archetype, Set<Entity>> _recycleBin = {};
   final List<EntityManagerListener> _observers = [];
   final Set<Entity> _deletionQueue = {};
+  final List<(Entity, Iterable<Component>)> _creationQueue = [];
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
@@ -36,15 +37,30 @@ class EntityManager implements EntityManagerListener {
     );
     final recycleBin = _recycleBin.putIfAbsent(archetype, () => {});
     final recycled = recycleBin.isEmpty ? null : recycleBin.first;
+
+    final entity = recycled ?? _newEntity++;
     if (recycled != null) {
-      _componentManager.addComponents(recycled, components);
       recycleBin.remove(recycled);
-      return recycled;
     }
-    _componentManager.addComponents(_newEntity, components);
-    _updateEntityArchetype(_newEntity, archetype);
-    onEntityCreated(_newEntity);
-    return _newEntity++;
+
+    _creationQueue.add((entity, components));
+    return entity;
+  }
+
+  void processCreationQueue() {
+    for (final (entity, components) in _creationQueue) {
+      _createEntityImmediate(entity, components);
+    }
+    _creationQueue.clear();
+  }
+
+  void _createEntityImmediate(Entity entity, Iterable<Component> components) {
+    _componentManager.addComponents(entity, components);
+    final archetype = _archetypeManager.getArchetype(
+      components.map((c) => c.runtimeType),
+    );
+    _updateEntityArchetype(entity, archetype);
+    onEntityCreated(entity);
   }
 
   Entity cloneEntity(Entity entity) {
