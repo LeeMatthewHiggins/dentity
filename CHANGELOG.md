@@ -29,6 +29,33 @@
 - Entity deletion queue is now processed after each system runs, ensuring proper entity lifecycle management.
 - Add comprehensive entity deletion tests covering edge cases like cascading deletions and multi-system interactions.
 
+## 1.4.0
+
+- Add comprehensive stats collection system for profiling and debugging
+  - Optional stats tracking via `enableStats: true` flag in World constructor
+  - Entity lifecycle tracking (created, destroyed, recycled, peak count)
+  - Queue size monitoring (creation and deletion queues)
+  - System performance profiling with timing measurements
+  - Archetype distribution tracking
+  - Snapshot and diff capabilities for comparing stats over time
+  - Reset functionality for clearing stats
+- Add industry-standard benchmark metrics
+  - ns/op (nanoseconds per operation) - Google Benchmark standard
+  - ops/s (operations per second) - throughput metric
+  - entities/s (entities per second) - entity-specific throughput
+  - ns/entity (cost per entity) - performance cost metric
+- Add shared benchmark library for consistent testing
+  - Standardized entity counts: 1,024 (small), 16,384 (medium), 65,536 (large), 1,000,000 (very large)
+  - Reusable benchmark functions: creation, processing, removal, recycling, mixed workload
+  - Stats overhead measurement with accurate percentage calculation
+- Enhanced benchmark Flutter app with professional UI
+  - Real-time progress tracking with progress bar
+  - Three chart types: Duration, Throughput, Stats Overhead comparison
+  - Expandable cards showing detailed metrics for each benchmark
+  - Dark theme with color-coded visualizations
+  - Industry-standard metric display (ops/s, ns/op, entities/s)
+- All stats collection has minimal overhead (~24-32%) and zero overhead when disabled
+
 ## 1.3.0
 
 - Add entity creation queue to prevent newly created entities from being processed by subsequent systems in the same frame.

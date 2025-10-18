@@ -24,12 +24,29 @@ class EntityManager implements EntityManagerListener {
   final List<EntityManagerListener> _observers = [];
   final Set<Entity> _deletionQueue = {};
   final List<(Entity, Iterable<Component>)> _creationQueue = [];
+  EntityStats? _entityStats;
+  ArchetypeStats? _archetypeStats;
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
 
   EntityManager(this._componentManager)
       : _archetypeManager = _componentManager.archetypeManager;
+
+  void setStats(EntityStats? entityStats, ArchetypeStats? archetypeStats) {
+    _entityStats = entityStats;
+    _archetypeStats = archetypeStats;
+  }
+
+  void updateArchetypeStats() {
+    if (_archetypeStats == null) return;
+    for (final entry in _entitiesByArchetype.entries) {
+      _archetypeStats!.updateEntityCount(entry.key, entry.value.length);
+    }
+    for (final entry in _recycleBin.entries) {
+      _archetypeStats!.updateRecycleBinSize(entry.key, entry.value.length);
+    }
+  }
 
   Entity createEntity(Iterable<Component> components) {
     final archetype = _archetypeManager.getArchetype(
@@ -41,9 +58,11 @@ class EntityManager implements EntityManagerListener {
     final entity = recycled ?? _newEntity++;
     if (recycled != null) {
       recycleBin.remove(recycled);
+      _entityStats?.incrementRecycled();
     }
 
     _creationQueue.add((entity, components));
+    _entityStats?.updateCreationQueueSize(_creationQueue.length);
     return entity;
   }
 
@@ -52,6 +71,7 @@ class EntityManager implements EntityManagerListener {
       _createEntityImmediate(entity, components);
     }
     _creationQueue.clear();
+    _entityStats?.updateCreationQueueSize(0);
   }
 
   void _createEntityImmediate(Entity entity, Iterable<Component> components) {
@@ -61,6 +81,7 @@ class EntityManager implements EntityManagerListener {
     );
     _updateEntityArchetype(entity, archetype);
     onEntityCreated(entity);
+    _entityStats?.incrementCreated();
   }
 
   Entity cloneEntity(Entity entity) {
@@ -73,6 +94,7 @@ class EntityManager implements EntityManagerListener {
 
   void destroyEntity(Entity entity) {
     _deletionQueue.add(entity);
+    _entityStats?.updateDeletionQueueSize(_deletionQueue.length);
   }
 
   void processDeletionQueue() {
@@ -80,6 +102,7 @@ class EntityManager implements EntityManagerListener {
       _destroyEntityImmediate(entity);
     }
     _deletionQueue.clear();
+    _entityStats?.updateDeletionQueueSize(0);
   }
 
   void _destroyEntityImmediate(Entity entity) {
@@ -90,6 +113,7 @@ class EntityManager implements EntityManagerListener {
     _componentManager.removeAllComponents(entity);
     _entitiesByArchetype[archetype]?.remove(entity);
     _entityByArchetype.remove(entity);
+    _entityStats?.incrementDestroyed();
   }
 
   void addComponents(Entity entity, Iterable<Component> components) {

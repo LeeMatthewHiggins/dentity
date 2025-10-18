@@ -5,12 +5,18 @@ class World {
   final EntityManager _entityManager;
   final ComponentManager _componentManager;
   final List<System> _systems;
+  final WorldStats? stats;
 
   World(
     this._componentManager,
     this._entityManager,
-    this._systems,
-  ) {
+    this._systems, {
+    bool enableStats = false,
+  }) : stats = enableStats ? WorldStats() : null {
+    final worldStats = stats;
+    if (worldStats != null) {
+      _entityManager.setStats(worldStats.entities, worldStats.archetypes);
+    }
     for (var system in _systems) {
       system.attach(_entityManager);
     }
@@ -18,9 +24,27 @@ class World {
 
   void process({Duration delta = const Duration(milliseconds: 16)}) {
     _entityManager.processCreationQueue();
+
     for (var system in _systems) {
-      system.process(delta);
+      if (stats != null) {
+        final systemStats = stats!.getOrCreateSystemStats(system.runtimeType.toString());
+        final stopwatch = Stopwatch()..start();
+        final entitiesBefore = _entityManager.entities.length;
+
+        system.process(delta);
+
+        stopwatch.stop();
+        systemStats.recordExecution(stopwatch.elapsed, entitiesBefore);
+      } else {
+        system.process(delta);
+      }
+
       _entityManager.processDeletionQueue();
+    }
+
+    if (stats != null) {
+      _entityManager.updateArchetypeStats();
+      stats!.incrementFrameCount();
     }
   }
 

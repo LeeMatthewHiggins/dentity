@@ -16,3 +16,4 @@ export 'src/world/world_serialiser_json.dart';
 export 'src/system.dart';
 export 'src/archetype/archetype.dart';
 export 'src/archetype/archetype_manager_big_int.dart';
+export 'src/stats/stats.dart';

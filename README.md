@@ -13,7 +13,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.2.1
+  dentity: ^1.4.0
 ```
 
 Then, run the following command to install the package:
@@ -175,6 +175,98 @@ void main() {
   print('Updated position: (\${position?.x}, \${position?.y})'); // Should output (1, 1)
 }
 ```
+
+## Stats Collection & Profiling
+
+Dentity includes a comprehensive stats collection system for profiling and debugging. Enable stats tracking to monitor entity lifecycle, system performance, and archetype distribution.
+
+### Enabling Stats
+
+```dart
+World createWorldWithStats() {
+  final componentManager = ComponentManager(
+    archetypeManagerFactory: (types) => ArchetypeManagerBigInt(types),
+    componentArrayFactories: {
+      Position: () => ContiguousSparseList<Position>(),
+      Velocity: () => ContiguousSparseList<Velocity>(),
+    },
+  );
+
+  final entityManager = EntityManager(componentManager);
+  final movementSystem = MovementSystem();
+
+  return World(
+    componentManager,
+    entityManager,
+    [movementSystem],
+    enableStats: true,  // Enable stats collection
+  );
+}
+```
+
+### Accessing Stats
+
+```dart
+void main() {
+  final world = createWorldWithStats();
+
+  for (var i = 0; i < 1000; i++) {
+    world.createEntity({Position(0, 0), Velocity(1, 1)});
+  }
+
+  world.process();
+
+  // Access entity stats
+  print('Entities created: ${world.stats!.entities.totalCreated}');
+  print('Active entities: ${world.stats!.entities.activeCount}');
+  print('Peak entities: ${world.stats!.entities.peakCount}');
+  print('Recycled entities: ${world.stats!.entities.recycledCount}');
+
+  // Access system performance stats
+  for (final systemStats in world.stats!.systems) {
+    print('${systemStats.name}: ${systemStats.averageTimeMs.toStringAsFixed(3)}ms avg');
+  }
+
+  // Access archetype distribution
+  final mostUsed = world.stats!.archetypes.getMostUsedArchetypes();
+  for (final archetype in mostUsed.take(5)) {
+    print('Archetype ${archetype.archetype}: ${archetype.count} entities');
+  }
+}
+```
+
+### Available Metrics
+
+**Entity Stats:**
+- `totalCreated` - Total entities created
+- `totalDestroyed` - Total entities destroyed
+- `activeCount` - Currently active entities
+- `recycledCount` - Number of recycled entities
+- `peakCount` - Maximum concurrent entities
+- `creationQueueSize` - Current creation queue size
+- `deletionQueueSize` - Current deletion queue size
+
+**System Stats:**
+- `callCount` - Number of times the system has run
+- `totalEntitiesProcessed` - Total entities processed
+- `totalTime` - Cumulative processing time
+- `averageTimeMicros` - Average time in microseconds
+- `averageTimeMs` - Average time in milliseconds
+- `minTime` - Minimum processing time
+- `maxTime` - Maximum processing time
+
+**Archetype Stats:**
+- `totalArchetypes` - Number of unique archetypes
+- `totalEntities` - Total entities across all archetypes
+- `getMostUsedArchetypes()` - Returns archetypes sorted by entity count
+
+**Note:** Stats collection adds ~24-32% overhead. Disable for production builds.
+
+## Benchmarking
+
+Dentity includes industry-standard benchmarks using metrics like `ns/op` (nanoseconds per operation), `ops/s` (operations per second), and `entities/s` (entities per second).
+
+See the [benchmark_app](benchmark_app/) for a Flutter app with real-time performance visualization.
 
 ## Entity Deletion
 
