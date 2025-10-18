@@ -22,6 +22,7 @@ class EntityManager implements EntityManagerListener {
   final ArchetypeManagerInterface _archetypeManager;
   final Map<Archetype, Set<Entity>> _recycleBin = {};
   final List<EntityManagerListener> _observers = [];
+  final Set<Entity> _deletionQueue = {};
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
@@ -55,6 +56,17 @@ class EntityManager implements EntityManagerListener {
   bool hasEntity(Entity entity) => _entityByArchetype.containsKey(entity);
 
   void destroyEntity(Entity entity) {
+    _deletionQueue.add(entity);
+  }
+
+  void processDeletionQueue() {
+    for (final entity in _deletionQueue) {
+      _destroyEntityImmediate(entity);
+    }
+    _deletionQueue.clear();
+  }
+
+  void _destroyEntityImmediate(Entity entity) {
     final archetype = getArchetype(entity);
     if (archetype == null) return;
     onEntityWillDestroy(entity);

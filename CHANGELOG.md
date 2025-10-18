@@ -22,3 +22,9 @@
 
 - expose the component serialiser to the world.
 - remove the need to pass the entity manager to the component serialiser.
+
+## 1.2.1
+
+- Fix entity deletion queue processing to prevent entities from being processed after deletion.
+- Entity deletion queue is now processed after each system runs, ensuring proper entity lifecycle management.
+- Add comprehensive entity deletion tests covering edge cases like cascading deletions and multi-system interactions.

@@ -13,7 +13,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.0.0
+  dentity: ^1.2.1
 ```
 
 Then, run the following command to install the package:
@@ -155,7 +155,7 @@ World createBasicExampleWorld() {
 
 ## Example Usage
 
-Here’s how you can use the above setup:
+Here's how you can use the above setup:
 
 ```dart
 void main() {
@@ -174,6 +174,37 @@ void main() {
   final position = world.componentManager.getComponent<Position>(entity);
   print('Updated position: (\${position?.x}, \${position?.y})'); // Should output (1, 1)
 }
+```
+
+## Entity Deletion
+
+Entities can be destroyed using `world.destroyEntity(entity)`. Deletions are queued and processed automatically after each system runs during `world.process()`.
+
+```dart
+void main() {
+  final world = createBasicExampleWorld();
+
+  final entity = world.createEntity({
+    Position(0, 0),
+    Velocity(1, 1),
+  });
+
+  // Queue entity for deletion
+  world.destroyEntity(entity);
+
+  // Deletion happens after systems process
+  world.process();
+
+  // Entity is now deleted
+  final position = world.componentManager.getComponent<Position>(entity);
+  print(position); // null
+}
+```
+
+If you need to manually process deletions outside of `world.process()`, you can call:
+
+```dart
+world.entityManager.processDeletionQueue();
 ```
 
 ## Serialization Example

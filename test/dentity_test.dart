@@ -162,6 +162,7 @@ void main() {
           });
           world.destroyEntity(positionOnly);
           world.destroyEntity(entity2);
+          world.entityManager.processDeletionQueue();
           final recycledPositionOnly = world.createEntity({Position(0, 0)});
           expect(recycledPositionOnly, equals(positionOnly));
           final newPositionOnly = world.createEntity({Position(0, 0)});
