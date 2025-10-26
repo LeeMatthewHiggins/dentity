@@ -27,7 +27,8 @@ class World {
 
     for (var system in _systems) {
       if (stats != null) {
-        final systemStats = stats!.getOrCreateSystemStats(system.runtimeType.toString());
+        final systemStats =
+            stats!.getOrCreateSystemStats(system.runtimeType.toString());
         final stopwatch = Stopwatch()..start();
         final entitiesBefore = _entityManager.entities.length;
 
@@ -45,6 +46,7 @@ class World {
     if (stats != null) {
       _entityManager.updateArchetypeStats();
       stats!.incrementFrameCount();
+      stats!.addDeltaTime(delta);
     }
   }
 

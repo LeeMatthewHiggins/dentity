@@ -62,3 +62,10 @@
 - Entity creation queue is processed at the start of each world.process() call.
 - Add comprehensive entity creation tests covering spawning, recycling, and multi-system interactions.
 - Entities created during system processing are now deferred until the next frame for consistent behavior.
+
+## 1.4.1
+
+- Add world time tracking to WorldStats
+  - WorldStats now tracks accumulated world time using Duration type
+  - World time is displayed in stats output and snapshots
+  - World time is properly reset when stats are reset
