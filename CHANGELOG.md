@@ -69,3 +69,15 @@
   - WorldStats now tracks accumulated world time using Duration type
   - World time is displayed in stats output and snapshots
   - World time is properly reset when stats are reset
+
+## 1.5.0
+
+- Add global world time and frame count tracking to World class
+  - World now tracks worldTime and frameCount as first-class properties
+  - Accessible via world.worldTime and world.frameCount
+  - Stats mirror these values as single source of truth
+- Add world reference to System class
+  - Systems can now access their world via system.world
+  - New attachToWorld method replaces deprecated attach method
+  - Systems have direct access to world time and frame count
+  - Old attach method is deprecated but still functional for backwards compatibility

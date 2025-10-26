@@ -23,7 +23,7 @@ class World {
       _entityManager.setStats(worldStats.entities, worldStats.archetypes);
     }
     for (var system in _systems) {
-      system.attach(_entityManager);
+      system.attachWorld(this);
     }
   }
 

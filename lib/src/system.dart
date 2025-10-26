@@ -1,12 +1,22 @@
 import 'package:dentity/dentity.dart';
 
 abstract class System {
+  World? _world;
   late final EntityManager entityManager;
   late final ComponentManagerReadOnlyInterface componentManager;
 
+  World get world => _world!;
+
+  @Deprecated('Use attachWorld instead')
   void attach(EntityManager entityManager) {
     componentManager = entityManager.componentManager;
     this.entityManager = entityManager;
+  }
+
+  void attachWorld(World world) {
+    _world = world;
+    componentManager = world.entityManager.componentManager;
+    entityManager = world.entityManager;
   }
 
   void process(Duration delta);
@@ -17,9 +27,16 @@ abstract class EntitySystem extends System {
   Set<Type> get filterTypes;
 
   @override
+  @Deprecated('Use attachToWorld instead')
   void attach(EntityManager entityManager) {
     view = entityManager.viewForTypes(filterTypes);
     super.attach(entityManager);
+  }
+
+  @override
+  void attachWorld(World world) {
+    super.attachWorld(world);
+    view = entityManager.viewForTypes(filterTypes);
   }
 
   @override
