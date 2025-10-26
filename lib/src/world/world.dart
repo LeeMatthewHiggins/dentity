@@ -6,6 +6,11 @@ class World {
   final ComponentManager _componentManager;
   final List<System> _systems;
   final WorldStats? stats;
+  Duration _worldTime = Duration.zero;
+  int _frameCount = 0;
+
+  Duration get worldTime => _worldTime;
+  int get frameCount => _frameCount;
 
   World(
     this._componentManager,
@@ -43,10 +48,13 @@ class World {
       _entityManager.processDeletionQueue();
     }
 
+    _worldTime += delta;
+    _frameCount++;
+
     if (stats != null) {
       _entityManager.updateArchetypeStats();
-      stats!.incrementFrameCount();
-      stats!.addDeltaTime(delta);
+      stats!.setFrameCount(_frameCount);
+      stats!.setWorldTime(_worldTime);
     }
   }
 

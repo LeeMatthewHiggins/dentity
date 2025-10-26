@@ -22,12 +22,12 @@ class WorldStats {
     return _systems.putIfAbsent(systemName, () => SystemStats(systemName));
   }
 
-  void incrementFrameCount() {
-    _frameCount++;
+  void setFrameCount(int count) {
+    _frameCount = count;
   }
 
-  void addDeltaTime(Duration dt) {
-    _worldTime += dt;
+  void setWorldTime(Duration time) {
+    _worldTime = time;
   }
 
   void reset() {
