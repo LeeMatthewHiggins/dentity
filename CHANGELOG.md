@@ -70,17 +70,8 @@
   - World time is displayed in stats output and snapshots
   - World time is properly reset when stats are reset
 
-## 1.5.0
+## 1.6.0
 
-- Add global world time and frame count tracking to World class
-  - World now tracks worldTime and frameCount as first-class properties
-  - Accessible via world.worldTime and world.frameCount
-  - Stats mirror these values as single source of truth
-- Add world reference to System class
-  - Systems can now access their world via system.world
-  - New attachToWorld method replaces deprecated attach method
-  - Systems have direct access to world time and frame count
-  - Old attach method is deprecated but still functional for backwards compatibility
 - Add EntityView caching for improved performance
   - Entity views are now automatically cached by archetype
   - Calling viewForTypes() or view() with the same archetype returns the same instance
@@ -98,3 +89,15 @@
   - Now takes EntityComposition instead of Map<Type, SparseList<Component>>
   - Old code continues to work due to Map implementation
   - Recommended to migrate to componentLists.get<T>(entity) pattern
+
+## 1.5.0
+
+- Add global world time and frame count tracking to World class
+  - World now tracks worldTime and frameCount as first-class properties
+  - Accessible via world.worldTime and world.frameCount
+  - Stats mirror these values as single source of truth
+- Add world reference to System class
+  - Systems can now access their world via system.world
+  - New attachToWorld method replaces deprecated attach method
+  - Systems have direct access to world time and frame count
+  - Old attach method is deprecated but still functional for backwards compatibility

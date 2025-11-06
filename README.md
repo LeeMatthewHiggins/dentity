@@ -13,7 +13,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.4.0
+  dentity: ^1.6.0
 ```
 
 Then, run the following command to install the package:
@@ -353,7 +353,7 @@ void main() {
 
 ## View Caching
 
-**New in v1.5.0**: Entity views are now automatically cached for improved performance. When you call `viewForTypes()` or `view()` with the same archetype, the same `EntityView` instance is returned, eliminating redundant object creation.
+**New in v1.6.0**: Entity views are now automatically cached for improved performance. When you call `viewForTypes()` or `view()` with the same archetype, the same `EntityView` instance is returned, eliminating redundant object creation.
 
 ```dart
 // These return the same cached instance
@@ -373,13 +373,13 @@ print(world.entityManager.viewCacheSize);
 - Reduced memory allocations in hot paths
 - Consistent view instances throughout the frame
 
-## Migration Guide (v1.4 → v1.5)
+## Migration Guide (v1.5 → v1.6)
 
 ### Component Access Updates
 
 The old manual casting pattern has been replaced with the cleaner `EntityComposition.get<T>()` method:
 
-**Old Pattern (v1.4 and earlier):**
+**Old Pattern (v1.5 and earlier):**
 ```dart
 class MovementSystem extends EntitySystem {
   @override
@@ -396,7 +396,7 @@ class MovementSystem extends EntitySystem {
 }
 ```
 
-**New Pattern (v1.5+):**
+**New Pattern (v1.6+):**
 ```dart
 class MovementSystem extends EntitySystem {
   @override
