@@ -118,13 +118,28 @@ class MovementSystem extends EntitySystem {
   Set<Type> get filterTypes => const {Position, Velocity};
 
   @override
-  void processEntity(Entity entity, Map<Type, SparseList<Component>> componentLists, Duration delta) {
-    final position = componentLists[Position]?[entity] as Position;
-    final velocity = componentLists[Velocity]?[entity] as Velocity;
+  void processEntity(Entity entity, EntityComposition componentLists, Duration delta) {
+    final position = componentLists.get<Position>(entity)!;
+    final velocity = componentLists.get<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }
 }
+```
+
+### Component Access
+
+The `EntityComposition` class provides clean, type-safe component access:
+
+```dart
+// Clean, type-safe access
+final position = componentLists.get<Position>(entity);
+
+// Get the sparse list for a component type
+final positionList = componentLists.listFor<Position>();
+
+// Backwards compatible Map access
+final position = componentLists[Position]?[entity] as Position?;
 ```
 
 ## Setting Up the World
@@ -335,6 +350,91 @@ void main() {
   print('Deserialized position: (\${deserializedPosition?.x}, \${deserializedPosition?.y})');
 }
 ```
+
+## View Caching
+
+**New in v1.5.0**: Entity views are now automatically cached for improved performance. When you call `viewForTypes()` or `view()` with the same archetype, the same `EntityView` instance is returned, eliminating redundant object creation.
+
+```dart
+// These return the same cached instance
+final view1 = world.viewForTypes({Position, Velocity});
+final view2 = world.viewForTypes({Position, Velocity});
+assert(identical(view1, view2)); // true
+
+// Clear the cache if needed (rare)
+world.entityManager.clearViewCache();
+
+// Check cache size
+print(world.entityManager.viewCacheSize);
+```
+
+**Benefits:**
+- Zero performance overhead - views are reused across systems
+- Reduced memory allocations in hot paths
+- Consistent view instances throughout the frame
+
+## Migration Guide (v1.4 → v1.5)
+
+### Component Access Updates
+
+The old manual casting pattern has been replaced with the cleaner `EntityComposition.get<T>()` method:
+
+**Old Pattern (v1.4 and earlier):**
+```dart
+class MovementSystem extends EntitySystem {
+  @override
+  void processEntity(
+    Entity entity,
+    Map<Type, SparseList<Component>> componentLists,
+    Duration delta,
+  ) {
+    final position = componentLists[Position]?[entity] as Position;
+    final velocity = componentLists[Velocity]?[entity] as Velocity;
+    position.x += velocity.x;
+    position.y += velocity.y;
+  }
+}
+```
+
+**New Pattern (v1.5+):**
+```dart
+class MovementSystem extends EntitySystem {
+  @override
+  void processEntity(
+    Entity entity,
+    EntityComposition componentLists,
+    Duration delta,
+  ) {
+    final position = componentLists.get<Position>(entity)!;
+    final velocity = componentLists.get<Velocity>(entity)!;
+    position.x += velocity.x;
+    position.y += velocity.y;
+  }
+}
+```
+
+### Breaking Changes
+
+1. **System signature change**: `processEntity` now takes `EntityComposition` instead of `Map<Type, SparseList<Component>>`
+2. **EntityView.componentLists**: Now returns `EntityComposition` instead of `Map`
+
+### Backwards Compatibility
+
+`EntityComposition` implements `Map<Type, SparseList<Component>>`, so old code continues to work:
+
+```dart
+// Still works (backwards compatible)
+final position = componentLists[Position]?[entity] as Position?;
+
+// But the new way is cleaner
+final position = componentLists.get<Position>(entity);
+```
+
+### Deprecated Methods
+
+The following methods are deprecated and will be removed in v2.0:
+- `EntityView.getComponentArray(Type)` - Use `componentLists[type]` or `componentLists.listFor<T>()`
+- `EntityView.getComponentForType(Type, Entity)` - Use `componentLists.get<T>(entity)`
 
 ## Contributing
 

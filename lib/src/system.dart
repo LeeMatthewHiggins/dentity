@@ -49,7 +49,7 @@ abstract class EntitySystem extends System {
 
   void processEntity(
     Entity entity,
-    Map<Type, SparseList<Component>> componentLists,
+    EntityComposition componentLists,
     Duration delta,
   );
 }

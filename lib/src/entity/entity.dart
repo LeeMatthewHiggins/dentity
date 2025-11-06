@@ -26,6 +26,7 @@ class EntityManager implements EntityManagerListener {
   final List<(Entity, Iterable<Component>)> _creationQueue = [];
   EntityStats? _entityStats;
   ArchetypeStats? _archetypeStats;
+  final Map<Archetype, EntityView> _viewCache = {};
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
@@ -151,6 +152,19 @@ class EntityManager implements EntityManagerListener {
         .where((e) => _archetypeManager.isSubtype(e.key, archetype))
         .expand((e) => e.value);
   }
+
+  EntityView getOrCreateView(Archetype archetype) {
+    return _viewCache.putIfAbsent(
+      archetype,
+      () => EntityView(this, archetype),
+    );
+  }
+
+  void clearViewCache() {
+    _viewCache.clear();
+  }
+
+  int get viewCacheSize => _viewCache.length;
 
   void _updateEntityArchetype(Entity entity, Archetype newArchetype) {
     final previousArchetype = getArchetype(entity);

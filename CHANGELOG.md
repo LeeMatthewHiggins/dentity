@@ -81,3 +81,20 @@
   - New attachToWorld method replaces deprecated attach method
   - Systems have direct access to world time and frame count
   - Old attach method is deprecated but still functional for backwards compatibility
+- Add EntityView caching for improved performance
+  - Entity views are now automatically cached by archetype
+  - Calling viewForTypes() or view() with the same archetype returns the same instance
+  - Eliminates redundant object creation in hot paths
+  - New clearViewCache() method to clear cache if needed
+  - New viewCacheSize getter to inspect cache size
+  - Zero performance overhead - cached views automatically reflect entity changes
+- Introduce EntityComposition class for cleaner component access
+  - Replaces Map<Type, SparseList<Component>> with semantic wrapper
+  - New get<T>(entity) method for clean, type-safe component access
+  - New listFor<T>() method to get sparse list for a component type
+  - Fully backwards compatible - implements Map interface
+  - Deprecated EntityView.getComponentArray() and getComponentForType()
+- **Breaking Change**: EntitySystem.processEntity signature updated
+  - Now takes EntityComposition instead of Map<Type, SparseList<Component>>
+  - Old code continues to work due to Map implementation
+  - Recommended to migrate to componentLists.get<T>(entity) pattern

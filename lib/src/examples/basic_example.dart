@@ -183,11 +183,11 @@ class MovementSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    Map<Type, SparseList<Component>> componentLists,
+    EntityComposition componentLists,
     Duration delta,
   ) {
-    final position = componentLists[Position]?[entity] as Position;
-    final velocity = componentLists[Velocity]?[entity] as Velocity;
+    final position = componentLists.get<Position>(entity)!;
+    final velocity = componentLists.get<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }

@@ -77,7 +77,12 @@ class World {
 }
 
 extension EntityViewOnWorld on World {
-  EntityView view(Archetype archetype) => EntityView(_entityManager, archetype);
-  EntityView viewForTypes(Set<Type> types) =>
-      EntityView.fromTypes(_entityManager, types);
+  EntityView view(Archetype archetype) =>
+      _entityManager.getOrCreateView(archetype);
+
+  EntityView viewForTypes(Set<Type> types) {
+    final archetype =
+        _entityManager.componentManager.archetypeManager.getArchetype(types);
+    return _entityManager.getOrCreateView(archetype);
+  }
 }
