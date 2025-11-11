@@ -1,0 +1,144 @@
+name: Deploy Demo Apps to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies for benchmark_app
+        run: |
+          cd benchmark_app
+          flutter pub get
+
+      - name: Build benchmark_app for web
+        run: |
+          cd benchmark_app
+          flutter build web --release --base-href /dentity/benchmark/
+
+      - name: Install dependencies for asteroids_app
+        run: |
+          cd asteroids_app
+          flutter pub get
+
+      - name: Build asteroids_app for web
+        run: |
+          cd asteroids_app
+          flutter build web --release --base-href /dentity/asteroids/
+
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p _site
+          mkdir -p _site/benchmark
+          mkdir -p _site/asteroids
+          cp -r benchmark_app/build/web/* _site/benchmark/
+          cp -r asteroids_app/build/web/* _site/asteroids/
+
+      - name: Create index page
+        run: |
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Dentity - ECS Framework Demos</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                line-height: 1.6;
+                background: #f5f5f5;
+              }
+              h1 {
+                color: #333;
+                border-bottom: 3px solid #0066cc;
+                padding-bottom: 10px;
+              }
+              .demo-card {
+                background: white;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 20px 0;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              .demo-card h2 {
+                margin-top: 0;
+                color: #0066cc;
+              }
+              .demo-card a {
+                display: inline-block;
+                background: #0066cc;
+                color: white;
+                padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 4px;
+                margin-top: 10px;
+              }
+              .demo-card a:hover {
+                background: #0052a3;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Dentity - Entity-Component-System Framework</h1>
+            <p>A powerful and flexible ECS framework for Dart applications. Explore the live demos below:</p>
+
+            <div class="demo-card">
+              <h2>Asteroids Game</h2>
+              <p>A complete game demonstrating ECS patterns with ship controls, collision detection, shield system, and scoring. Use arrow keys to move and space to fire!</p>
+              <a href="./asteroids/">Launch Asteroids Demo</a>
+            </div>
+
+            <div class="demo-card">
+              <h2>Performance Benchmarks</h2>
+              <p>Real-time performance visualization showing entity creation, processing, removal, and recycling metrics with industry-standard measurements (ops/s, ns/op).</p>
+              <a href="./benchmark/">Launch Benchmark App</a>
+            </div>
+
+            <div class="demo-card">
+              <h2>GitHub Repository</h2>
+              <p>View the source code, documentation, and contribute to the project.</p>
+              <a href="https://github.com/LeeMatthewHiggins/dentity">View on GitHub</a>
+            </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

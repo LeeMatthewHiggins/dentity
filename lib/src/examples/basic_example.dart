@@ -183,11 +183,11 @@ class MovementSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    Map<Type, SparseList<Component>> componentLists,
+    EntityComposition componentLists,
     Duration delta,
   ) {
-    final position = componentLists[Position]?[entity] as Position;
-    final velocity = componentLists[Velocity]?[entity] as Velocity;
+    final position = componentLists.get<Position>(entity)!;
+    final velocity = componentLists.get<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }
@@ -205,7 +205,7 @@ ComponentManager _createContiguousComponentManager() {
   );
 }
 
-World _createContiguousWorld() {
+World _createContiguousWorld({bool enableStats = false}) {
   final componentManager = _createContiguousComponentManager();
   final entityManager = EntityManager(componentManager);
   final movementSystem = MovementSystem();
@@ -213,11 +213,12 @@ World _createContiguousWorld() {
     componentManager,
     entityManager,
     [movementSystem],
+    enableStats: enableStats,
   );
 }
 
-World createBasicExampleWorld() {
-  return _createContiguousWorld(); //LH we can switch to _createSimpleWorld if we want to use SimpleSparseList
+World createBasicExampleWorld({bool enableStats = false}) {
+  return _createContiguousWorld(enableStats: enableStats);
 }
 
 //Dummy components for testing

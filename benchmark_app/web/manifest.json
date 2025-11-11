@@ -1,12 +1,12 @@
 {
-    "name": "benchmark_app",
-    "short_name": "benchmark_app",
+    "name": "Dentity Benchmark",
+    "short_name": "Dentity Benchmark",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#1a1a1a",
+    "theme_color": "#0066cc",
+    "description": "Performance benchmarks for Dentity ECS framework with real-time visualization",
+    "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [
         {

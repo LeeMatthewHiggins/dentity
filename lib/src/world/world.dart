@@ -5,20 +5,61 @@ class World {
   final EntityManager _entityManager;
   final ComponentManager _componentManager;
   final List<System> _systems;
+  final WorldStats? stats;
+  Duration _worldTime = Duration.zero;
+  int _frameCount = 0;
+
+  Duration get worldTime => _worldTime;
+  int get frameCount => _frameCount;
 
   World(
     this._componentManager,
     this._entityManager,
-    this._systems,
-  ) {
+    this._systems, {
+    bool enableStats = false,
+  }) : stats = enableStats ? WorldStats() : null {
+    final worldStats = stats;
+    if (worldStats != null) {
+      _entityManager.setStats(worldStats.entities, worldStats.archetypes);
+    }
     for (var system in _systems) {
-      system.attach(_entityManager);
+      system.attachWorld(this);
     }
   }
 
+  void flushEntityQueues() {
+    _entityManager.processCreationQueue();
+    _entityManager.processDeletionQueue();
+  }
+
   void process({Duration delta = const Duration(milliseconds: 16)}) {
+    _entityManager.processCreationQueue();
+
     for (var system in _systems) {
-      system.process(delta);
+      if (stats != null) {
+        final systemStats =
+            stats!.getOrCreateSystemStats(system.runtimeType.toString());
+        final stopwatch = Stopwatch()..start();
+        final entitiesBefore = _entityManager.entities.length;
+
+        system.process(delta);
+
+        stopwatch.stop();
+        systemStats.recordExecution(stopwatch.elapsed, entitiesBefore);
+      } else {
+        system.process(delta);
+      }
+
+      _entityManager.processDeletionQueue();
+    }
+
+    _worldTime += delta;
+    _frameCount++;
+
+    if (stats != null) {
+      _entityManager.updateArchetypeStats();
+      stats!.setFrameCount(_frameCount);
+      stats!.setWorldTime(_worldTime);
     }
   }
 
@@ -41,7 +82,19 @@ class World {
 }
 
 extension EntityViewOnWorld on World {
-  EntityView view(Archetype archetype) => EntityView(_entityManager, archetype);
-  EntityView viewForTypes(Set<Type> types) =>
-      EntityView.fromTypes(_entityManager, types);
+  EntityView view(Archetype archetype, {bool autoFlush = true}) {
+    if (autoFlush) {
+      _entityManager.processCreationQueue();
+    }
+    return _entityManager.getOrCreateView(archetype);
+  }
+
+  EntityView viewForTypes(Set<Type> types, {bool autoFlush = true}) {
+    if (autoFlush) {
+      _entityManager.processCreationQueue();
+    }
+    final archetype =
+        _entityManager.componentManager.archetypeManager.getArchetype(types);
+    return _entityManager.getOrCreateView(archetype);
+  }
 }

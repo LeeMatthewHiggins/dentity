@@ -3,8 +3,8 @@ import 'package:dentity/dentity.dart';
 class EntityView implements Iterable<Entity> {
   final EntityManager _entityManager;
   final Archetype archetype;
-  final Map<Type, SparseList<Component>> _componentArrays;
-  Map<Type, SparseList<Component>> get componentLists => _componentArrays;
+  final EntityComposition _componentArrays;
+  EntityComposition get componentLists => _componentArrays;
 
   EntityView(this._entityManager, this.archetype)
       : _componentArrays =
@@ -24,12 +24,15 @@ class EntityView implements Iterable<Entity> {
   Iterable<Entity> get _entities =>
       _entityManager.getEntitiesMatching(archetype);
 
+  @Deprecated('Use componentLists[type] directly instead')
   SparseList<Component>? getComponentArray(Type type) => _componentArrays[type];
 
+  @Deprecated('Use componentLists.get<T>(entity) instead')
   Component? getComponentForType(Type type, Entity entity) =>
       _componentArrays[type]?[entity];
 
-  T? getComponent<T>(Entity entity) => _componentArrays[T]?[entity] as T?;
+  T? getComponent<T extends Component>(Entity entity) =>
+      _componentArrays.get<T>(entity);
 
   @override
   Iterator<Entity> get iterator => _entities.iterator;
@@ -78,7 +81,7 @@ class EntityView implements Iterable<Entity> {
   void forEach(void Function(Entity entity) f) => _entities.forEach(f);
 
   @override
-  Iterable<Entity> cast<Entity>() => _entities.cast<Entity>();
+  Iterable<E> cast<E>() => _entities.cast<E>();
 
   @override
   Entity get last => _entities.last;
@@ -142,6 +145,10 @@ class EntityView implements Iterable<Entity> {
 }
 
 extension EntityViewOnEntityManager on EntityManager {
-  EntityView view(Archetype archetype) => EntityView(this, archetype);
-  EntityView viewForTypes(Set<Type> types) => EntityView.fromTypes(this, types);
+  EntityView view(Archetype archetype) => getOrCreateView(archetype);
+
+  EntityView viewForTypes(Set<Type> types) {
+    final archetype = componentManager.archetypeManager.getArchetype(types);
+    return getOrCreateView(archetype);
+  }
 }

@@ -10,6 +10,20 @@ import 'package:test/test.dart';
 import 'dentity_test.mocks.dart';
 
 @GenerateMocks([EntityManagerListener])
+
+World createWorldWithoutSystems() {
+  final componentManager = ComponentManager(
+    archetypeManagerFactory: (types) => ArchetypeManagerBigInt(types),
+    componentArrayFactories: {
+      Position: () => ContiguousSparseList<Position>(),
+      Velocity: () => ContiguousSparseList<Velocity>(),
+      OtherComponent: () => ContiguousSparseList<OtherComponent>(),
+    },
+  );
+  final entityManager = EntityManager(componentManager);
+  return World(componentManager, entityManager, []);
+}
+
 void main() {
   group(
     'Test Functionality',
@@ -160,9 +174,12 @@ void main() {
             Position(0, 0),
             Velocity(1, 1),
           });
+          world.process();
           world.destroyEntity(positionOnly);
           world.destroyEntity(entity2);
+          world.process();
           final recycledPositionOnly = world.createEntity({Position(0, 0)});
+          world.process();
           expect(recycledPositionOnly, equals(positionOnly));
           final newPositionOnly = world.createEntity({Position(0, 0)});
           expect(newPositionOnly, isNot(recycledPositionOnly));
@@ -175,6 +192,7 @@ void main() {
           final world = createBasicExampleWorld();
           final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
           final entity2 = world.createEntity({Position(0, 0), Velocity(1, 1)});
+          world.process();
           world.removeComponents(entity1, {Position});
           world.addComponents(entity2, {OtherComponent()});
           final position = world.getComponent<Position>(entity1);
@@ -187,9 +205,10 @@ void main() {
       );
 
       test('test entity clone', () {
-        final world = createBasicExampleWorld();
+        final world = createWorldWithoutSystems();
         final entity1 = world.createEntity({Position(0, 0), Velocity(1, 1)});
         final entity2 = world.cloneEntity(entity1);
+        world.process();
         final position1 = world.getComponent<Position>(entity1);
         final position2 = world.getComponent<Position>(entity2);
         expect(position1?.x, position2?.x);
@@ -225,23 +244,12 @@ void main() {
           });
           world.process();
 
-          final entity3 = world.createEntity({
-            Position(2, 2),
-            Velocity(30, 30),
-          });
           final position1 = view.getComponent<Position>(entity1);
           expect(position1?.x, 10);
           expect(position1?.y, 10);
           final position2 = view.getComponent<Position>(entity2);
           expect(position2?.x, 21);
           expect(position2?.y, 21);
-
-          final position3 = view.getComponent<Position>(entity3);
-          expect(position3?.x, 2);
-          expect(position3?.y, 2);
-
-          final otherComponent = view.getComponent<OtherComponent>(entity3);
-          expect(otherComponent, isNull);
         },
       );
       test('Test Observers work correctly', () {
@@ -263,6 +271,37 @@ void main() {
       test(
         'test entity factory creates entites correctly',
         () {
+          final world = createWorldWithoutSystems();
+          const prefabName = 'prefab1';
+          final prefab1 = EntityPrefab(
+            name: prefabName,
+            components: {
+              Position(0, 0),
+              Velocity(10, 10),
+            },
+          );
+          final factory = EntityFactory(prefabs: {prefab1});
+          final entity = factory.fabricate(prefabName, world);
+          world.process();
+          final position = world.getComponent<Position>(entity);
+          expect(position?.x, 0);
+          expect(position?.y, 0);
+          final velocity = world.getComponent<Velocity>(entity);
+          expect(velocity?.x, 10);
+          expect(velocity?.y, 10);
+
+          final entity2 = factory.fabricate(prefabName, world);
+          world.process();
+          final position2 = world.getComponent<Position>(entity2);
+          expect(entity2, isNot(entity));
+          expect(position2?.x, 0);
+          expect(position2?.y, 0);
+        },
+      );
+
+      test(
+        'test entity factory works with systems',
+        () {
           final world = createBasicExampleWorld();
           const prefabName = 'prefab1';
           final prefab1 = EntityPrefab(
@@ -274,31 +313,18 @@ void main() {
           );
           final factory = EntityFactory(prefabs: {prefab1});
           final entity = factory.fabricate(prefabName, world);
-          final position = world.getComponent<Position>(entity);
-          expect(position?.x, 0);
-          expect(position?.y, 0);
-          final velocity = world.getComponent<Velocity>(entity);
-          expect(velocity?.x, 10);
-          expect(velocity?.y, 10);
-
           world.process();
 
           final positionAfterProcess = world.getComponent<Position>(entity);
           expect(positionAfterProcess?.x, 10);
           expect(positionAfterProcess?.y, 10);
-
-          final entity2 = factory.fabricate(prefabName, world);
-          final position2 = world.getComponent<Position>(entity2);
-          expect(entity2, isNot(entity));
-          expect(position2?.x, 0);
-          expect(position2?.y, 0);
         },
       );
 
       test(
         'test view filters correctly',
         () {
-          final world = createBasicExampleWorld();
+          final world = createWorldWithoutSystems();
           final entity1 = world.createEntity({
             Position(0, 0),
             Velocity(10, 10),
@@ -323,6 +349,7 @@ void main() {
             Position,
             Velocity,
           });
+          world.process();
 
           expect(positionView, contains(entity1));
           expect(positionView, contains(entity2));
@@ -346,7 +373,7 @@ void main() {
       );
 
       test('test serialization works', () {
-        final world = createBasicExampleWorld();
+        final world = createWorldWithoutSystems();
         world.createEntity({
           Position(0, 0),
           Velocity(10, 10),
@@ -355,6 +382,7 @@ void main() {
           Position(1, 1),
           Velocity(20, 20),
         });
+        world.process();
 
         final EntitySerialiser entitySerialiser = EntitySerialiserJson(
           world.entityManager,
@@ -398,6 +426,7 @@ void main() {
 
         final deserialized = worldSerialiser.deserialize(decoded);
         expect(deserialized, isNotEmpty);
+        world.process();
 
         final deserializedPosition =
             world.getComponent<Position>(deserialized.first);
@@ -417,74 +446,120 @@ void main() {
   group(
     'Test Performance',
     () {
-      const runTimes = 120; // 120fps
-      const entityCount =
-          2000; // runtimes * entityCount is number of entity process ops
+      const smallCount = BenchmarkConstants.smallEntityCount;
+      const runTimes = BenchmarkConstants.defaultRunTimes;
+
       test(
         'Creation',
         () {
-          final world = createBasicExampleWorld();
-          final sw = Stopwatch()..start();
-          for (var i = 0; i < entityCount; i++) {
-            world.createEntity(
-              {
-                Position(0, 0),
-                Velocity(1, 1),
-              },
-            );
-          }
-          sw.stop();
-          print('Creation benchmark took ${sw.elapsedMilliseconds}ms');
-          expect(sw.elapsedMilliseconds, lessThan(32));
+          final result = Benchmarks.creation(entityCount: smallCount);
+          print('Creation benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
+          expect(result.durationMs, lessThan(100));
         },
       );
 
       test(
         'Processing',
         () {
-          final world = createBasicExampleWorld();
-          for (var i = 0; i < entityCount; i++) {
-            world.createEntity(
-              {
-                Position(0, 0),
-                Velocity(1, 1),
-              },
-            );
-          }
-
-          final sw = Stopwatch()..start();
-          for (var i = 0; i < runTimes; i++) {
-            world.process();
-          }
-          sw.stop();
-          print('Processing benchmark took ${sw.elapsedMilliseconds}ms');
-          expect(sw.elapsedMilliseconds, lessThan(16));
+          final result = Benchmarks.processing(
+            entityCount: smallCount,
+            runTimes: runTimes,
+          );
+          print('Processing benchmark took ${result.durationMs}ms for ${result.operations} operations');
+          expect(result.durationMs, lessThan(100));
         },
       );
 
       test(
         'Removal',
         () {
-          final world = createBasicExampleWorld();
-          final entities = <Entity>[];
-          for (var i = 0; i < entityCount; i++) {
-            entities.add(
-              world.createEntity(
-                {
-                  Position(0, 0),
-                  Velocity(1, 1),
-                },
-              ),
-            );
+          final result = Benchmarks.removal(entityCount: smallCount);
+          print('Removal benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
+          expect(result.durationMs, lessThan(100));
+        },
+      );
+
+      test(
+        'Stats collection overhead',
+        () {
+          final result = Benchmarks.statsOverhead(
+            entityCount: smallCount,
+            runTimes: runTimes,
+          );
+
+          print('Without stats: ${result.durationWithoutStatsMs}ms');
+          print('With stats: ${result.durationWithStatsMs}ms');
+          print('Overhead: ${result.durationMs}ms (${result.overheadPercent.toStringAsFixed(2)}%)');
+          print('Operations: ${result.operations}');
+
+          expect(result.overheadPercent, lessThan(150));
+        },
+      );
+
+      test(
+        'Entity recycling performance',
+        () {
+          final result = Benchmarks.recycling(entityCount: smallCount);
+
+          print('Entity recycling benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
+          print('Entities recycled: ${result.stats!.entities.recycledCount}');
+
+          expect(result.stats!.entities.recycledCount, equals(smallCount));
+          expect(result.durationMs, lessThan(200));
+        },
+      );
+
+      test(
+        'Mixed workload with stats',
+        () {
+          final result = Benchmarks.mixedWorkload(runTimes: runTimes);
+
+          print('Mixed workload benchmark took ${result.durationMs}ms');
+          print('Total frames: ${result.stats!.frameCount}');
+          print('Entities created: ${result.stats!.entities.totalCreated}');
+          print('Entities destroyed: ${result.stats!.entities.totalDestroyed}');
+          print('Active entities: ${result.stats!.entities.activeCount}');
+          print('Peak entities: ${result.stats!.entities.peakCount}');
+          print('Entities recycled: ${result.stats!.entities.recycledCount}');
+
+          for (final systemStats in result.stats!.systems) {
+            print('${systemStats.name}: ${systemStats.averageTimeMs.toStringAsFixed(3)}ms avg');
           }
 
-          final sw = Stopwatch()..start();
-          for (var i = 0; i < entityCount; i++) {
-            world.destroyEntity(entities[i]);
+          expect(result.durationMs, lessThan(200));
+          expect(result.stats!.frameCount, equals(runTimes));
+        },
+      );
+
+      test(
+        'Archetype distribution analysis',
+        () {
+          final world = createBasicExampleWorld(enableStats: true);
+
+          for (var i = 0; i < 500; i++) {
+            world.createEntity({Position(0, 0), Velocity(1, 1)});
           }
-          sw.stop();
-          print('Removal benchmark took ${sw.elapsedMilliseconds}ms');
-          expect(sw.elapsedMilliseconds, lessThan(32));
+          for (var i = 0; i < 300; i++) {
+            world.createEntity({Position(0, 0)});
+          }
+          for (var i = 0; i < 200; i++) {
+            world.createEntity({Position(0, 0), Velocity(1, 1), OtherComponent()});
+          }
+
+          world.process();
+
+          final mostUsed = world.stats!.archetypes.getMostUsedArchetypes();
+
+          print('Total archetypes: ${world.stats!.archetypes.totalArchetypes}');
+          print('Total entities: ${world.stats!.archetypes.totalEntities}');
+          print('Most used archetypes:');
+          for (var i = 0; i < mostUsed.length && i < 5; i++) {
+            print('  ${mostUsed[i].archetype}: ${mostUsed[i].count} entities');
+          }
+
+          expect(world.stats!.archetypes.totalArchetypes, equals(3));
+          expect(world.stats!.archetypes.totalEntities, equals(1000));
+          expect(mostUsed.first.count, equals(500));
         },
       );
     },

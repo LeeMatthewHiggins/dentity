@@ -22,6 +22,11 @@ class EntityManager implements EntityManagerListener {
   final ArchetypeManagerInterface _archetypeManager;
   final Map<Archetype, Set<Entity>> _recycleBin = {};
   final List<EntityManagerListener> _observers = [];
+  final Set<Entity> _deletionQueue = {};
+  final List<(Entity, Iterable<Component>)> _creationQueue = [];
+  EntityStats? _entityStats;
+  ArchetypeStats? _archetypeStats;
+  final Map<Archetype, EntityView> _viewCache = {};
 
   Iterable<Entity> get entities =>
       _entitiesByArchetype.entries.map((e) => e.value).expand((e) => e);
@@ -29,21 +34,55 @@ class EntityManager implements EntityManagerListener {
   EntityManager(this._componentManager)
       : _archetypeManager = _componentManager.archetypeManager;
 
+  void setStats(EntityStats? entityStats, ArchetypeStats? archetypeStats) {
+    _entityStats = entityStats;
+    _archetypeStats = archetypeStats;
+  }
+
+  void updateArchetypeStats() {
+    if (_archetypeStats == null) return;
+    for (final entry in _entitiesByArchetype.entries) {
+      _archetypeStats!.updateEntityCount(entry.key, entry.value.length);
+    }
+    for (final entry in _recycleBin.entries) {
+      _archetypeStats!.updateRecycleBinSize(entry.key, entry.value.length);
+    }
+  }
+
   Entity createEntity(Iterable<Component> components) {
     final archetype = _archetypeManager.getArchetype(
       components.map((c) => c.runtimeType),
     );
     final recycleBin = _recycleBin.putIfAbsent(archetype, () => {});
     final recycled = recycleBin.isEmpty ? null : recycleBin.first;
+
+    final entity = recycled ?? _newEntity++;
     if (recycled != null) {
-      _componentManager.addComponents(recycled, components);
       recycleBin.remove(recycled);
-      return recycled;
+      _entityStats?.incrementRecycled();
     }
-    _componentManager.addComponents(_newEntity, components);
-    _updateEntityArchetype(_newEntity, archetype);
-    onEntityCreated(_newEntity);
-    return _newEntity++;
+
+    _creationQueue.add((entity, components));
+    _entityStats?.updateCreationQueueSize(_creationQueue.length);
+    return entity;
+  }
+
+  void processCreationQueue() {
+    for (final (entity, components) in _creationQueue) {
+      _createEntityImmediate(entity, components);
+    }
+    _creationQueue.clear();
+    _entityStats?.updateCreationQueueSize(0);
+  }
+
+  void _createEntityImmediate(Entity entity, Iterable<Component> components) {
+    _componentManager.addComponents(entity, components);
+    final archetype = _archetypeManager.getArchetype(
+      components.map((c) => c.runtimeType),
+    );
+    _updateEntityArchetype(entity, archetype);
+    onEntityCreated(entity);
+    _entityStats?.incrementCreated();
   }
 
   Entity cloneEntity(Entity entity) {
@@ -55,6 +94,19 @@ class EntityManager implements EntityManagerListener {
   bool hasEntity(Entity entity) => _entityByArchetype.containsKey(entity);
 
   void destroyEntity(Entity entity) {
+    _deletionQueue.add(entity);
+    _entityStats?.updateDeletionQueueSize(_deletionQueue.length);
+  }
+
+  void processDeletionQueue() {
+    for (final entity in _deletionQueue) {
+      _destroyEntityImmediate(entity);
+    }
+    _deletionQueue.clear();
+    _entityStats?.updateDeletionQueueSize(0);
+  }
+
+  void _destroyEntityImmediate(Entity entity) {
     final archetype = getArchetype(entity);
     if (archetype == null) return;
     onEntityWillDestroy(entity);
@@ -62,6 +114,7 @@ class EntityManager implements EntityManagerListener {
     _componentManager.removeAllComponents(entity);
     _entitiesByArchetype[archetype]?.remove(entity);
     _entityByArchetype.remove(entity);
+    _entityStats?.incrementDestroyed();
   }
 
   void addComponents(Entity entity, Iterable<Component> components) {
@@ -99,6 +152,19 @@ class EntityManager implements EntityManagerListener {
         .where((e) => _archetypeManager.isSubtype(e.key, archetype))
         .expand((e) => e.value);
   }
+
+  EntityView getOrCreateView(Archetype archetype) {
+    return _viewCache.putIfAbsent(
+      archetype,
+      () => EntityView(this, archetype),
+    );
+  }
+
+  void clearViewCache() {
+    _viewCache.clear();
+  }
+
+  int get viewCacheSize => _viewCache.length;
 
   void _updateEntityArchetype(Entity entity, Archetype newArchetype) {
     final previousArchetype = getArchetype(entity);
