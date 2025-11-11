@@ -257,12 +257,12 @@ void main() {
       world.createEntity({Position(0, 0)});
       world.createEntity({Position(1, 1)});
 
-      final viewBeforeProcess = world.viewForTypes({Position});
+      final viewBeforeProcess = world.viewForTypes({Position}, autoFlush: false);
       expect(viewBeforeProcess.length, equals(0));
 
       world.entityManager.processCreationQueue();
 
-      final viewAfterProcess = world.viewForTypes({Position});
+      final viewAfterProcess = world.viewForTypes({Position}, autoFlush: false);
       expect(viewAfterProcess.length, equals(2));
     });
   });
