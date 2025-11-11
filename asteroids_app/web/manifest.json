@@ -1,11 +1,11 @@
 {
-    "name": "Dentity Benchmark",
-    "short_name": "Dentity Benchmark",
+    "name": "Dentity Asteroids",
+    "short_name": "Asteroids",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#1a1a1a",
+    "background_color": "#000000",
     "theme_color": "#0066cc",
-    "description": "Performance benchmarks for Dentity ECS framework with real-time visualization",
+    "description": "Asteroids game built with Dentity ECS framework",
     "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [

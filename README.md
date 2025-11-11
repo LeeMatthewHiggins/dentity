@@ -1,11 +1,18 @@
 
-# Dentity - Example Usage
+# Dentity - Entity-Component-System Framework
 
-`Dentity` is a powerful and flexible Entity-Component-System (ECS) framework for Dart applications. This README provides a basic example to help you get started with the `Dentity` package.
+`Dentity` is a powerful and flexible Entity-Component-System (ECS) framework for Dart applications. This README provides examples and documentation to help you get started with the `Dentity` package.
+
+## Live Demos
+
+Try out Dentity in your browser:
+
+- **[Asteroids Game](https://leematthewhiggins.github.io/dentity/asteroids/)** - Complete game demonstrating ECS patterns with collision detection, shield system, and scoring
+- **[Performance Benchmarks](https://leematthewhiggins.github.io/dentity/benchmark/)** - Real-time performance visualization with industry-standard metrics
 
 ## Introduction
 
-This example demonstrates how to use `Dentity` to create a simple ECS world where entities have `Position` and `Velocity` components, and a `MovementSystem` updates their positions based on their velocities.
+This documentation demonstrates how to use `Dentity` to create ECS-based applications. The examples show how entities with `Position` and `Velocity` components are updated by a `MovementSystem`.
 
 ## Installation
 
@@ -13,7 +20,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.6.0
+  dentity: ^1.7.0
 ```
 
 Then, run the following command to install the package:

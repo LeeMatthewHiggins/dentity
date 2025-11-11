@@ -27,6 +27,11 @@ class World {
     }
   }
 
+  void flushEntityQueues() {
+    _entityManager.processCreationQueue();
+    _entityManager.processDeletionQueue();
+  }
+
   void process({Duration delta = const Duration(milliseconds: 16)}) {
     _entityManager.processCreationQueue();
 
@@ -77,10 +82,17 @@ class World {
 }
 
 extension EntityViewOnWorld on World {
-  EntityView view(Archetype archetype) =>
-      _entityManager.getOrCreateView(archetype);
+  EntityView view(Archetype archetype, {bool autoFlush = true}) {
+    if (autoFlush) {
+      _entityManager.processCreationQueue();
+    }
+    return _entityManager.getOrCreateView(archetype);
+  }
 
-  EntityView viewForTypes(Set<Type> types) {
+  EntityView viewForTypes(Set<Type> types, {bool autoFlush = true}) {
+    if (autoFlush) {
+      _entityManager.processCreationQueue();
+    }
     final archetype =
         _entityManager.componentManager.archetypeManager.getArchetype(types);
     return _entityManager.getOrCreateView(archetype);

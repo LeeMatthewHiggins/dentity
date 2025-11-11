@@ -90,6 +90,22 @@
   - Old code continues to work due to Map implementation
   - Recommended to migrate to componentLists.get<T>(entity) pattern
 
+## 1.7.0
+
+- Improve entity queue API for better ergonomics and discoverability
+  - Add flushEntityQueues() method for explicit queue flushing
+  - Add autoFlush parameter to viewForTypes() and view() (defaults to true)
+  - Entity queries now automatically flush creation queue by default
+  - Eliminates common "Bad state: No element" errors when querying newly created entities
+  - Can opt-out of auto-flush with autoFlush: false for performance-critical code
+  - Zero breaking changes - existing code continues to work
+- Add comprehensive Asteroids game example demonstrating ECS patterns
+  - Complete game with ship, asteroids, lasers, collision, and scoring
+  - Demonstrates proper component/system separation
+  - Shows frame-rate independent physics using delta time
+  - Includes shield system with damage-over-time mechanics
+  - Full Flutter UI with game loop and input handling
+
 ## 1.5.0
 
 - Add global world time and frame count tracking to World class

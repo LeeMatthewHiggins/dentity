@@ -28,6 +28,26 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+        {
+            "name": "asteroids_app",
+            "cwd": "asteroids_app",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "asteroids_app (profile mode)",
+            "cwd": "asteroids_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "asteroids_app (release mode)",
+            "cwd": "asteroids_app",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
         }
     ]
 }
