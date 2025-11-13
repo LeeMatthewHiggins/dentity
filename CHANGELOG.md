@@ -105,6 +105,15 @@
   - Shows frame-rate independent physics using delta time
   - Includes shield system with damage-over-time mechanics
   - Full Flutter UI with game loop and input handling
+  - Modular code structure (main.dart, game_state.dart, asteroids_painter.dart)
+- Add GitHub Pages deployment for live demos
+  - Automated deployment workflow for both asteroids and benchmark apps
+  - Live demos available at https://leematthewhiggins.github.io/dentity/
+  - Interactive examples showcasing framework capabilities
+- Documentation improvements
+  - Add live demo links to README for easy access
+  - Update package version to 1.7.0
+  - Enhanced web manifests for better app presentation
 
 ## 1.5.0
 

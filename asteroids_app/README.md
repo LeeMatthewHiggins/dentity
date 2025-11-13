@@ -2,6 +2,8 @@
 
 A classic Asteroids game implementation demonstrating the Dentity Entity-Component-System (ECS) framework.
 
+**[Play the game live in your browser!](https://leematthewhiggins.github.io/dentity/asteroids/)**
+
 ## About
 
 This app showcases how to build a complete game using the Dentity ECS architecture. It includes:
