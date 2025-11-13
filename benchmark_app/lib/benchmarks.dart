@@ -1,5 +1,5 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
+import 'basic_example.dart';
 
 class BenchmarkConstants {
   static const int defaultRunTimes = 120;

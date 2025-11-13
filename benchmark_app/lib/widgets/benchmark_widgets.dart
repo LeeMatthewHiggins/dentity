@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:dentity/dentity_examples.dart';
+import '../enhanced_benchmark_result.dart';
 
 class SummaryDashboard extends StatelessWidget {
   final List<EnhancedBenchmarkResult> results;

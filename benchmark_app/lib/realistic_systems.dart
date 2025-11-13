@@ -327,7 +327,7 @@ class WeaponSystem extends EntitySystem {
     final distance = math.sqrt(dx * dx + dy * dy);
 
     if (distance <= weapon.range) {
-      final bulletSpeed = 500.0;
+      const bulletSpeed = 500.0;
       final velocityX = (dx / distance) * bulletSpeed;
       final velocityY = (dy / distance) * bulletSpeed;
 

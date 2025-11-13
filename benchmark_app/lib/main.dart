@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:dentity/dentity_examples.dart';
 import 'widgets/benchmark_widgets.dart';
+import 'enhanced_benchmark_result.dart';
+import 'realistic_scenarios.dart';
 
 EnhancedBenchmarkResult _runSpaceShooter(Map<String, int> params) {
   return RealisticScenarios.spaceShooter(

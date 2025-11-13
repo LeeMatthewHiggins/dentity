@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
+import 'realistic_components.dart';
+import 'realistic_systems.dart';
+import 'enhanced_benchmark_result.dart';
+import 'basic_example.dart';
 
 World _createRealisticWorld({
   required List<System> systems,

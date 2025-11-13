@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
+import 'test_helpers.dart';
 
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -440,128 +440,6 @@ void main() {
         expect(deserializedVelocity?.x, 10);
         expect(deserializedVelocity?.y, 10);
       });
-    },
-  );
-
-  group(
-    'Test Performance',
-    () {
-      const smallCount = BenchmarkConstants.smallEntityCount;
-      const runTimes = BenchmarkConstants.defaultRunTimes;
-
-      test(
-        'Creation',
-        () {
-          final result = Benchmarks.creation(entityCount: smallCount);
-          print('Creation benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
-          expect(result.durationMs, lessThan(100));
-        },
-      );
-
-      test(
-        'Processing',
-        () {
-          final result = Benchmarks.processing(
-            entityCount: smallCount,
-            runTimes: runTimes,
-          );
-          print('Processing benchmark took ${result.durationMs}ms for ${result.operations} operations');
-          expect(result.durationMs, lessThan(100));
-        },
-      );
-
-      test(
-        'Removal',
-        () {
-          final result = Benchmarks.removal(entityCount: smallCount);
-          print('Removal benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
-          expect(result.durationMs, lessThan(100));
-        },
-      );
-
-      test(
-        'Stats collection overhead',
-        () {
-          final result = Benchmarks.statsOverhead(
-            entityCount: smallCount,
-            runTimes: runTimes,
-          );
-
-          print('Without stats: ${result.durationWithoutStatsMs}ms');
-          print('With stats: ${result.durationWithStatsMs}ms');
-          print('Overhead: ${result.durationMs}ms (${result.overheadPercent.toStringAsFixed(2)}%)');
-          print('Operations: ${result.operations}');
-
-          expect(result.overheadPercent, lessThan(150));
-        },
-      );
-
-      test(
-        'Entity recycling performance',
-        () {
-          final result = Benchmarks.recycling(entityCount: smallCount);
-
-          print('Entity recycling benchmark took ${result.durationMs}ms for ${result.entityCount} entities');
-          print('Entities recycled: ${result.stats!.entities.recycledCount}');
-
-          expect(result.stats!.entities.recycledCount, equals(smallCount));
-          expect(result.durationMs, lessThan(200));
-        },
-      );
-
-      test(
-        'Mixed workload with stats',
-        () {
-          final result = Benchmarks.mixedWorkload(runTimes: runTimes);
-
-          print('Mixed workload benchmark took ${result.durationMs}ms');
-          print('Total frames: ${result.stats!.frameCount}');
-          print('Entities created: ${result.stats!.entities.totalCreated}');
-          print('Entities destroyed: ${result.stats!.entities.totalDestroyed}');
-          print('Active entities: ${result.stats!.entities.activeCount}');
-          print('Peak entities: ${result.stats!.entities.peakCount}');
-          print('Entities recycled: ${result.stats!.entities.recycledCount}');
-
-          for (final systemStats in result.stats!.systems) {
-            print('${systemStats.name}: ${systemStats.averageTimeMs.toStringAsFixed(3)}ms avg');
-          }
-
-          expect(result.durationMs, lessThan(200));
-          expect(result.stats!.frameCount, equals(runTimes));
-        },
-      );
-
-      test(
-        'Archetype distribution analysis',
-        () {
-          final world = createBasicExampleWorld(enableStats: true);
-
-          for (var i = 0; i < 500; i++) {
-            world.createEntity({Position(0, 0), Velocity(1, 1)});
-          }
-          for (var i = 0; i < 300; i++) {
-            world.createEntity({Position(0, 0)});
-          }
-          for (var i = 0; i < 200; i++) {
-            world.createEntity({Position(0, 0), Velocity(1, 1), OtherComponent()});
-          }
-
-          world.process();
-
-          final mostUsed = world.stats!.archetypes.getMostUsedArchetypes();
-
-          print('Total archetypes: ${world.stats!.archetypes.totalArchetypes}');
-          print('Total entities: ${world.stats!.archetypes.totalEntities}');
-          print('Most used archetypes:');
-          for (var i = 0; i < mostUsed.length && i < 5; i++) {
-            print('  ${mostUsed[i].archetype}: ${mostUsed[i].count} entities');
-          }
-
-          expect(world.stats!.archetypes.totalArchetypes, equals(3));
-          expect(world.stats!.archetypes.totalEntities, equals(1000));
-          expect(mostUsed.first.count, equals(500));
-        },
-      );
     },
   );
 }

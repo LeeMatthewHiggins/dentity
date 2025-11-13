@@ -1,4 +1,4 @@
-import 'package:dentity/dentity_examples.dart';
+import 'test_helpers.dart';
 import 'package:test/test.dart';
 
 void main() {

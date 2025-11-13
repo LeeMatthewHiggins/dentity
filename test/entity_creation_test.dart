@@ -1,5 +1,5 @@
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
+import 'test_helpers.dart';
 import 'package:test/test.dart';
 
 class SpawnTag extends Component {
