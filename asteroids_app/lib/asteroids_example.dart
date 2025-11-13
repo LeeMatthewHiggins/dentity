@@ -2,8 +2,7 @@ import 'dart:math' as math;
 import 'package:dentity/dentity.dart';
 import 'asteroids_components.dart';
 import 'asteroids_systems.dart';
-import 'basic_example.dart';
-import 'realistic_components.dart';
+import 'basic_components.dart';
 
 class _WorldConfig {
   static const double defaultWidth = 800.0;

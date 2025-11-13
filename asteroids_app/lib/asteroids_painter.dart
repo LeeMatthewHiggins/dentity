@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Velocity;
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
+
+import 'asteroids_components.dart';
+import 'basic_components.dart';
 
 class AsteroidsPainter extends CustomPainter {
   final World world;

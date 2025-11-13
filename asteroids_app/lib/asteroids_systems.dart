@@ -1,8 +1,7 @@
 import 'dart:math' as math;
 import 'package:dentity/dentity.dart';
 import 'asteroids_components.dart';
-import 'basic_example.dart';
-import 'realistic_components.dart';
+import 'basic_components.dart';
 
 class _GameConstants {
   static const double shipRotationSpeed = 3.5;

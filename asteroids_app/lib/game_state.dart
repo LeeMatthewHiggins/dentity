@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:dentity/dentity.dart';
-import 'package:dentity/dentity_examples.dart';
 
 import 'asteroids_painter.dart';
+import 'asteroids_components.dart';
+import 'asteroids_example.dart';
 
 class AsteroidsGame extends StatefulWidget {
   const AsteroidsGame({super.key});
