@@ -20,7 +20,7 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.7.0
+  dentity: ^1.8.0
 ```
 
 Then, run the following command to install the package:

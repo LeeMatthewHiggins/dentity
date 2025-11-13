@@ -1,33 +1,83 @@
-## 1.0.0
+## 1.8.0
 
-- Initial version.
+- **Breaking Change**: Remove all example and benchmark code from main package
+  - Package now contains only core ECS framework functionality
+  - Removed lib/src/examples directory (basic_example, realistic components/systems)
+  - Removed lib/src/benchmarks directory (benchmarks, realistic scenarios)
+  - Removed dentity_examples.dart export file
+  - All examples moved to respective demo applications (asteroids_app, benchmark_app)
+- Keep package focused and lightweight
+  - Main package reduced from 509 KB to minimal core framework
+  - Tests use local test_helpers.dart instead of published examples
+  - No example dependencies in published package
+- Demo applications are self-contained
+  - asteroids_app includes all game-specific code locally
+  - benchmark_app includes all benchmark and realistic scenario code locally
+  - Both apps reference only the core dentity package
 
-## 1.1.0
+## 1.7.0
 
-- Change the serialiser to use a map of components instead of a list.
+- Improve entity queue API for better ergonomics and discoverability
+  - Add flushEntityQueues() method for explicit queue flushing
+  - Add autoFlush parameter to viewForTypes() and view() (defaults to true)
+  - Entity queries now automatically flush creation queue by default
+  - Eliminates common "Bad state: No element" errors when querying newly created entities
+  - Can opt-out of auto-flush with autoFlush: false for performance-critical code
+  - Zero breaking changes - existing code continues to work
+- Add comprehensive Asteroids game example demonstrating ECS patterns
+  - Complete game with ship, asteroids, lasers, collision, and scoring
+  - Demonstrates proper component/system separation
+  - Shows frame-rate independent physics using delta time
+  - Includes shield system with damage-over-time mechanics
+  - Full Flutter UI with game loop and input handling
+  - Modular code structure (main.dart, game_state.dart, asteroids_painter.dart)
+- Add GitHub Pages deployment for live demos
+  - Automated deployment workflow for both asteroids and benchmark apps
+  - Live demos available at https://leematthewhiggins.github.io/dentity/
+  - Interactive examples showcasing framework capabilities
+- Documentation improvements
+  - Add live demo links to README for easy access
+  - Update package version to 1.7.0
+  - Enhanced web manifests for better app presentation
 
-## 1.1.1
+## 1.6.0
 
-- Add the entity serialiser json.
+- Add EntityView caching for improved performance
+  - Entity views are now automatically cached by archetype
+  - Calling viewForTypes() or view() with the same archetype returns the same instance
+  - Eliminates redundant object creation in hot paths
+  - New clearViewCache() method to clear cache if needed
+  - New viewCacheSize getter to inspect cache size
+  - Zero performance overhead - cached views automatically reflect entity changes
+- Introduce EntityComposition class for cleaner component access
+  - Replaces Map<Type, SparseList<Component>> with semantic wrapper
+  - New get<T>(entity) method for clean, type-safe component access
+  - New listFor<T>() method to get sparse list for a component type
+  - Fully backwards compatible - implements Map interface
+  - Deprecated EntityView.getComponentArray() and getComponentForType()
+- **Breaking Change**: EntitySystem.processEntity signature updated
+  - Now takes EntityComposition instead of Map<Type, SparseList<Component>>
+  - Old code continues to work due to Map implementation
+  - Recommended to migrate to componentLists.get<T>(entity) pattern
 
-## 1.1.2
+## 1.5.0
 
-- Add component deserialisation method to entity serialiser.
+- Add global world time and frame count tracking to World class
+  - World now tracks worldTime and frameCount as first-class properties
+  - Accessible via world.worldTime and world.frameCount
+  - Stats mirror these values as single source of truth
+- Add world reference to System class
+  - Systems can now access their world via system.world
+  - New attachToWorld method replaces deprecated attach method
+  - Systems have direct access to world time and frame count
+  - Old attach method is deprecated but still functional for backwards compatibility
 
-## 1.1.3
+## 1.4.1
 
-- Add system get method to world.
-
-## 1.2.0
-
-- expose the component serialiser to the world.
-- remove the need to pass the entity manager to the component serialiser.
-
-## 1.2.1
-
-- Fix entity deletion queue processing to prevent entities from being processed after deletion.
-- Entity deletion queue is now processed after each system runs, ensuring proper entity lifecycle management.
-- Add comprehensive entity deletion tests covering edge cases like cascading deletions and multi-system interactions.
+- Add world time tracking to WorldStats
+  - WorldStats now tracks accumulated world time using Duration type
+  - World time is displayed in stats output and snapshots
+  - World time is properly reset when stats are reset
 
 ## 1.4.0
 
@@ -63,66 +113,33 @@
 - Add comprehensive entity creation tests covering spawning, recycling, and multi-system interactions.
 - Entities created during system processing are now deferred until the next frame for consistent behavior.
 
-## 1.4.1
+## 1.2.1
 
-- Add world time tracking to WorldStats
-  - WorldStats now tracks accumulated world time using Duration type
-  - World time is displayed in stats output and snapshots
-  - World time is properly reset when stats are reset
+- Fix entity deletion queue processing to prevent entities from being processed after deletion.
+- Entity deletion queue is now processed after each system runs, ensuring proper entity lifecycle management.
+- Add comprehensive entity deletion tests covering edge cases like cascading deletions and multi-system interactions.
 
-## 1.6.0
+## 1.2.0
 
-- Add EntityView caching for improved performance
-  - Entity views are now automatically cached by archetype
-  - Calling viewForTypes() or view() with the same archetype returns the same instance
-  - Eliminates redundant object creation in hot paths
-  - New clearViewCache() method to clear cache if needed
-  - New viewCacheSize getter to inspect cache size
-  - Zero performance overhead - cached views automatically reflect entity changes
-- Introduce EntityComposition class for cleaner component access
-  - Replaces Map<Type, SparseList<Component>> with semantic wrapper
-  - New get<T>(entity) method for clean, type-safe component access
-  - New listFor<T>() method to get sparse list for a component type
-  - Fully backwards compatible - implements Map interface
-  - Deprecated EntityView.getComponentArray() and getComponentForType()
-- **Breaking Change**: EntitySystem.processEntity signature updated
-  - Now takes EntityComposition instead of Map<Type, SparseList<Component>>
-  - Old code continues to work due to Map implementation
-  - Recommended to migrate to componentLists.get<T>(entity) pattern
+- expose the component serialiser to the world.
+- remove the need to pass the entity manager to the component serialiser.
 
-## 1.7.0
+## 1.1.3
 
-- Improve entity queue API for better ergonomics and discoverability
-  - Add flushEntityQueues() method for explicit queue flushing
-  - Add autoFlush parameter to viewForTypes() and view() (defaults to true)
-  - Entity queries now automatically flush creation queue by default
-  - Eliminates common "Bad state: No element" errors when querying newly created entities
-  - Can opt-out of auto-flush with autoFlush: false for performance-critical code
-  - Zero breaking changes - existing code continues to work
-- Add comprehensive Asteroids game example demonstrating ECS patterns
-  - Complete game with ship, asteroids, lasers, collision, and scoring
-  - Demonstrates proper component/system separation
-  - Shows frame-rate independent physics using delta time
-  - Includes shield system with damage-over-time mechanics
-  - Full Flutter UI with game loop and input handling
-  - Modular code structure (main.dart, game_state.dart, asteroids_painter.dart)
-- Add GitHub Pages deployment for live demos
-  - Automated deployment workflow for both asteroids and benchmark apps
-  - Live demos available at https://leematthewhiggins.github.io/dentity/
-  - Interactive examples showcasing framework capabilities
-- Documentation improvements
-  - Add live demo links to README for easy access
-  - Update package version to 1.7.0
-  - Enhanced web manifests for better app presentation
+- Add system get method to world.
 
-## 1.5.0
+## 1.1.2
 
-- Add global world time and frame count tracking to World class
-  - World now tracks worldTime and frameCount as first-class properties
-  - Accessible via world.worldTime and world.frameCount
-  - Stats mirror these values as single source of truth
-- Add world reference to System class
-  - Systems can now access their world via system.world
-  - New attachToWorld method replaces deprecated attach method
-  - Systems have direct access to world time and frame count
-  - Old attach method is deprecated but still functional for backwards compatibility
+- Add component deserialisation method to entity serialiser.
+
+## 1.1.1
+
+- Add the entity serialiser json.
+
+## 1.1.0
+
+- Change the serialiser to use a map of components instead of a list.
+
+## 1.0.0
+
+- Initial version.
