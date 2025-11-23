@@ -12,7 +12,14 @@ Try out Dentity in your browser:
 
 ## Introduction
 
-This documentation demonstrates how to use `Dentity` to create ECS-based applications. The examples show how entities with `Position` and `Velocity` components are updated by a `MovementSystem`.
+Dentity is an Entity-Component-System (ECS) framework for Dart and Flutter applications. It provides:
+
+- **List-Based Component Indexing** - Direct array access for component lookups
+- **Type-Safe APIs** - Generic methods for compile-time type checking
+- **Flexible Archetypes** - Efficient entity filtering and querying
+- **Production Ready** - Powers real games and applications (see the [Asteroids demo](https://leematthewhiggins.github.io/dentity/asteroids/))
+
+This documentation demonstrates how to use Dentity to create ECS-based applications, with examples showing how entities with `Position` and `Velocity` components are updated by systems.
 
 ## Installation
 
@@ -20,12 +27,10 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.9.0
+  dentity: ^1.9.1
 ```
 
-### Upgrading from 1.8.x
-
-Version 1.9.0 includes breaking changes for performance improvements. See the [Migration Guide](#migration-from-18x-to-19x) below.
+**Note:** If upgrading from 1.8.x or earlier, see the [Migration Guides](#migration-guides) at the bottom of this document.
 
 Then, run the following command to install the package:
 
@@ -129,28 +134,34 @@ class MovementSystem extends EntitySystem {
   Set<Type> get filterTypes => const {Position, Velocity};
 
   @override
-  void processEntity(Entity entity, EntityComposition componentLists, Duration delta) {
-    final position = componentLists.get<Position>(entity)!;
-    final velocity = componentLists.get<Velocity>(entity)!;
-    position.x += velocity.x;
-    position.y += velocity.y;
+  void processEntity(
+    Entity entity,
+    ComponentManagerReadOnlyInterface componentManager,
+    Duration delta,
+  ) {
+    final position = componentManager.getComponent<Position>(entity)!;
+    final velocity = componentManager.getComponent<Velocity>(entity)!;
+    position.x += velocity.x * delta.inMilliseconds / 1000.0;
+    position.y += velocity.y * delta.inMilliseconds / 1000.0;
   }
 }
 ```
 
 ### Component Access
 
-The `EntityComposition` class provides clean, type-safe component access:
+The `ComponentManager` provides clean, type-safe component access:
 
 ```dart
-// Clean, type-safe access
-final position = componentLists.get<Position>(entity);
+// Type-safe component access
+final position = componentManager.getComponent<Position>(entity);
 
-// Get the sparse list for a component type
-final positionList = componentLists.listFor<Position>();
+// Check if entity has a component
+if (componentManager.hasComponent<Position>(entity)) {
+  // ...
+}
 
-// Backwards compatible Map access
-final position = componentLists[Position]?[entity] as Position?;
+// Get all components of a type
+final allPositions = componentManager.getComponentsOfType<Position>();
 ```
 
 ## Setting Up the World
@@ -286,13 +297,31 @@ void main() {
 - `totalEntities` - Total entities across all archetypes
 - `getMostUsedArchetypes()` - Returns archetypes sorted by entity count
 
-**Note:** Stats collection adds ~24-32% overhead. Disable for production builds.
+**Note:** Stats collection adds overhead. Disable for production builds.
+
+## Real-World Example
+
+For a complete, production-ready example of Dentity in action, check out the [Asteroids Game](asteroids_app/) included in this repository. The game demonstrates:
+
+- **Collision Detection** - Efficient collision checking between asteroids, bullets, and the player ship
+- **Shield System** - Temporary invulnerability with visual feedback
+- **Scoring & Lives** - Game state management with entity lifecycle
+- **Sound & Rendering** - Integration with Flutter for rendering and audio
+- **Smooth Gameplay** - Real-time entity management and physics
+
+The complete source code is available in [asteroids_app/lib/asteroids_systems.dart](asteroids_app/lib/asteroids_systems.dart) and shows real-world patterns for:
+- Component design for game entities (Position, Velocity, Health, Collidable)
+- System implementation for movement, collision, rendering, and game logic
+- Entity creation and destruction during gameplay
+- Performance-optimized component access patterns
+
+**[Play it live in your browser →](https://leematthewhiggins.github.io/dentity/asteroids/)**
 
 ## Benchmarking
 
 Dentity includes industry-standard benchmarks using metrics like `ns/op` (nanoseconds per operation), `ops/s` (operations per second), and `entities/s` (entities per second).
 
-See the [benchmark_app](benchmark_app/) for a Flutter app with real-time performance visualization.
+See the [benchmark_app](benchmark_app/) for a Flutter app with real-time performance visualization, or **[run benchmarks in your browser →](https://leematthewhiggins.github.io/dentity/benchmark/)**
 
 ## Entity Deletion
 
@@ -380,21 +409,24 @@ print(world.entityManager.viewCacheSize);
 ```
 
 **Benefits:**
-- Zero performance overhead - views are reused across systems
-- Reduced memory allocations in hot paths
+- Views are reused across systems
+- Reduced memory allocations
 - Consistent view instances throughout the frame
 
-## Migration from 1.8.x to 1.9.x
 
-Version 1.9.0 includes major performance improvements (2-3x faster component access) but requires updating custom EntitySystem implementations.
+## Migration Guides
 
-### What Changed
+### Migration from 1.8.x to 1.9.x
+
+Version 1.9.0 includes optimized component access with list-based indexing but requires updating custom EntitySystem implementations.
+
+#### What Changed
 
 **EntityComposition class removed** - The intermediate `EntityComposition` abstraction has been removed. Systems now access components directly through `ComponentManager` for better performance.
 
 **EntitySystem.processEntity signature** - The second parameter changed from `EntityComposition` to `ComponentManagerReadOnlyInterface`.
 
-### Migration Steps
+#### Migration Steps
 
 **1. Update EntitySystem implementations:**
 
@@ -452,7 +484,7 @@ bool checkCollision(Entity a, Entity b, EntityView view) {
 }
 ```
 
-### Quick Find & Replace
+#### Quick Find & Replace
 
 For most codebases, these regex replacements will handle the migration:
 
@@ -468,16 +500,16 @@ For most codebases, these regex replacements will handle the migration:
    - Find: `view\.componentLists\.get<`
    - Replace: `view.getComponent<`
 
-### Performance Benefits
+#### Benefits
 
-After migration, you'll see:
-- 2-3x faster component access in hot paths
+After migration:
+- Optimized component access with list-based indexing
 - Reduced memory allocations (no EntityComposition copies)
-- Better cache locality with list-based indexing
+- Improved cache locality
 
-## Migration Guide (v1.5 → v1.6)
+### Migration from 1.5.x to 1.6.x
 
-### Component Access Updates
+#### Component Access Updates
 
 The old manual casting pattern has been replaced with the cleaner `EntityComposition.get<T>()` method:
 
@@ -515,12 +547,12 @@ class MovementSystem extends EntitySystem {
 }
 ```
 
-### Breaking Changes
+#### Breaking Changes
 
 1. **System signature change**: `processEntity` now takes `EntityComposition` instead of `Map<Type, SparseList<Component>>`
 2. **EntityView.componentLists**: Now returns `EntityComposition` instead of `Map`
 
-### Backwards Compatibility
+#### Backwards Compatibility
 
 `EntityComposition` implements `Map<Type, SparseList<Component>>`, so old code continues to work:
 
@@ -532,11 +564,11 @@ final position = componentLists[Position]?[entity] as Position?;
 final position = componentLists.get<Position>(entity);
 ```
 
-### Deprecated Methods
+#### Deprecated Methods
 
 The following methods are deprecated and will be removed in v2.0:
-- `EntityView.getComponentArray(Type)` - Use `componentLists[type]` or `componentLists.listFor<T>()`
-- `EntityView.getComponentForType(Type, Entity)` - Use `componentLists.get<T>(entity)`
+- `EntityView.getComponentArray(Type)` - Use `componentManager.getComponentByType` instead
+- `EntityView.getComponentForType(Type, Entity)` - Use `view.getComponent<T>(entity)` instead
 
 ## Contributing
 

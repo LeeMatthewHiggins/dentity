@@ -1,11 +1,21 @@
+## 1.9.1
+
+**Documentation Updates**
+
+- Update README to show current 1.9.x API in all examples
+- Add prominent Real-World Example section highlighting Asteroids game
+- Move migration guides to bottom of README for better discoverability
+- Remove performance claims from documentation
+- Add inline pragmas to hot-path functions for optimization
+
 ## 1.9.0
 
-**Major Performance Improvements**
+**Component Access Optimization**
 
-- Optimize component access with list-based indexing for 2-3x performance improvement
+- Optimize component access with list-based indexing
   - Replace Map-based component lookups with indexed array access in hot paths
   - Add type index cache to eliminate repeated ArchetypeManager lookups
-  - Component access now uses direct array indexing (~10-15ns) vs previous map lookups (~30-40ns)
+  - Component access now uses direct array indexing
 
 **Breaking Changes**
 
@@ -76,7 +86,7 @@ bool checkCollision(Entity a, Entity b, EntityView view) {
 }
 ```
 
-All 71 tests passing. Performance improvements verified with benchmarks.
+All tests passing.
 
 ## 1.8.0
 
