@@ -27,9 +27,9 @@ class AsteroidsPainter extends CustomPainter {
     final shipView = world.viewForTypes({Ship, Position, Rotation});
 
     for (final entity in shipView) {
-      final position = shipView.componentLists.get<Position>(entity)!;
-      final rotation = shipView.componentLists.get<Rotation>(entity)!;
-      final inputState = shipView.componentLists.get<InputState>(entity);
+      final position = shipView.getComponent<Position>(entity)!;
+      final rotation = shipView.getComponent<Rotation>(entity)!;
+      final inputState = shipView.getComponent<InputState>(entity);
 
       final paint = Paint()
         ..color = Colors.white
@@ -71,9 +71,9 @@ class AsteroidsPainter extends CustomPainter {
     final asteroidView = world.viewForTypes({Asteroid, Position, Rotation});
 
     for (final entity in asteroidView) {
-      final asteroid = asteroidView.componentLists.get<Asteroid>(entity)!;
-      final position = asteroidView.componentLists.get<Position>(entity)!;
-      final rotation = asteroidView.componentLists.get<Rotation>(entity)!;
+      final asteroid = asteroidView.getComponent<Asteroid>(entity)!;
+      final position = asteroidView.getComponent<Position>(entity)!;
+      final rotation = asteroidView.getComponent<Rotation>(entity)!;
 
       double radius;
       if (asteroid.size == 3) {
@@ -130,8 +130,8 @@ class AsteroidsPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     for (final entity in laserView) {
-      final position = laserView.componentLists.get<Position>(entity)!;
-      final velocity = laserView.componentLists.get<Velocity>(entity)!;
+      final position = laserView.getComponent<Position>(entity)!;
+      final velocity = laserView.getComponent<Velocity>(entity)!;
 
       final angle = math.atan2(velocity.y, velocity.x);
       final dx = math.cos(angle) * _laserLength;

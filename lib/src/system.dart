@@ -43,15 +43,14 @@ abstract class EntitySystem extends System {
 
   @override
   void process(Duration delta) {
-    final components = view.componentLists;
     for (var entity in view) {
-      processEntity(entity, components, delta);
+      processEntity(entity, componentManager, delta);
     }
   }
 
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   );
 }

@@ -15,12 +15,12 @@ class PhysicsSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final position = componentLists.get<Position>(entity)!;
-    final velocity = componentLists.get<Velocity>(entity)!;
-    final acceleration = componentLists.get<Acceleration>(entity);
+    final position = componentManager.getComponent<Position>(entity)!;
+    final velocity = componentManager.getComponent<Velocity>(entity)!;
+    final acceleration = componentManager.getComponent<Acceleration>(entity);
 
     if (acceleration != null) {
       velocity.x += acceleration.x * delta.inMilliseconds / 1000.0;
@@ -47,10 +47,10 @@ class RotationSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final rotation = componentLists.get<Rotation>(entity)!;
+    final rotation = componentManager.getComponent<Rotation>(entity)!;
     rotation.angle += rotation.angularVelocity * delta.inMilliseconds / 1000.0;
 
     while (rotation.angle >= _twoPi) {
@@ -74,10 +74,10 @@ class LifetimeSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final lifetime = componentLists.get<Lifetime>(entity)!;
+    final lifetime = componentManager.getComponent<Lifetime>(entity)!;
     lifetime.remainingMs -= delta.inMilliseconds;
 
     if (lifetime.remainingMs <= 0) {
@@ -112,7 +112,7 @@ class SimplifiedCollisionSystem extends EntitySystem {
 
     final view = world.viewForTypes(filterTypes);
     for (final entity in view) {
-      final position = view.componentLists.get<Position>(entity)!;
+      final position = view.getComponent<Position>(entity)!;
       final cell = _GridCell(
         (position.x / _gridSize).floor(),
         (position.y / _gridSize).floor(),
@@ -125,19 +125,19 @@ class SimplifiedCollisionSystem extends EntitySystem {
 
       for (var i = 0; i < entities.length; i++) {
         for (var j = i + 1; j < entities.length; j++) {
-          _checkCollision(entities[i], entities[j], view.componentLists);
+          _checkCollision(entities[i], entities[j], view);
         }
       }
     }
   }
 
-  void _checkCollision(Entity a, Entity b, EntityComposition components) {
-    final posA = components.get<Position>(a)!;
-    final posB = components.get<Position>(b)!;
-    final boxA = components.get<BoundingBox>(a)!;
-    final boxB = components.get<BoundingBox>(b)!;
-    final teamA = components.get<Team>(a)!;
-    final teamB = components.get<Team>(b)!;
+  void _checkCollision(Entity a, Entity b, EntityView view) {
+    final posA = view.getComponent<Position>(a)!;
+    final posB = view.getComponent<Position>(b)!;
+    final boxA = view.getComponent<BoundingBox>(a)!;
+    final boxB = view.getComponent<BoundingBox>(b)!;
+    final teamA = view.getComponent<Team>(a)!;
+    final teamB = view.getComponent<Team>(b)!;
 
     if (teamA.teamId == teamB.teamId) return;
 
@@ -155,7 +155,7 @@ class SimplifiedCollisionSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
   }
@@ -187,11 +187,11 @@ class DamageSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final health = componentLists.get<Health>(entity)!;
-    final damage = componentLists.get<Damage>(entity)!;
+    final health = componentManager.getComponent<Health>(entity)!;
+    final damage = componentManager.getComponent<Damage>(entity)!;
 
     health.current -= damage.amount;
     world.removeComponents(entity, [Damage]);
@@ -222,10 +222,10 @@ class HealthRegenerationSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final health = componentLists.get<Health>(entity)!;
+    final health = componentManager.getComponent<Health>(entity)!;
     if (health.regenerationRate > 0 && health.current < health.max) {
       health.current += health.regenerationRate * delta.inMilliseconds / 1000.0;
       if (health.current > health.max) {
@@ -255,7 +255,7 @@ class TargetingSystem extends EntitySystem {
     final entitiesWithTarget = world.viewForTypes({Position, Team, Target});
 
     for (final entity in allEntities) {
-      final position = allEntities.componentLists.get<Position>(entity)!;
+      final position = allEntities.getComponent<Position>(entity)!;
       final cell = _GridCell(
         (position.x / _gridSize).floor(),
         (position.y / _gridSize).floor(),
@@ -264,9 +264,9 @@ class TargetingSystem extends EntitySystem {
     }
 
     for (final entity in entitiesWithTarget) {
-      final position = entitiesWithTarget.componentLists.get<Position>(entity)!;
-      final team = entitiesWithTarget.componentLists.get<Team>(entity)!;
-      final target = entitiesWithTarget.componentLists.get<Target>(entity)!;
+      final position = entitiesWithTarget.getComponent<Position>(entity)!;
+      final team = entitiesWithTarget.getComponent<Team>(entity)!;
+      final target = entitiesWithTarget.getComponent<Target>(entity)!;
 
       final entityCell = _GridCell(
         (position.x / _gridSize).floor(),
@@ -285,10 +285,10 @@ class TargetingSystem extends EntitySystem {
           for (final otherEntity in cellEntities) {
             if (otherEntity == entity) continue;
 
-            final otherTeam = allEntities.componentLists.get<Team>(otherEntity)!;
+            final otherTeam = allEntities.getComponent<Team>(otherEntity)!;
             if (otherTeam.teamId == team.teamId) continue;
 
-            final otherPosition = allEntities.componentLists.get<Position>(otherEntity)!;
+            final otherPosition = allEntities.getComponent<Position>(otherEntity)!;
             final deltaX = position.x - otherPosition.x;
             final deltaY = position.y - otherPosition.y;
             final distSquared = deltaX * deltaX + deltaY * deltaY;
@@ -308,7 +308,7 @@ class TargetingSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
   }
@@ -324,17 +324,17 @@ class WeaponSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final weapon = componentLists.get<Weapon>(entity)!;
+    final weapon = componentManager.getComponent<Weapon>(entity)!;
 
     weapon.currentCooldown -= delta.inMilliseconds;
     if (weapon.currentCooldown <= 0) {
       weapon.currentCooldown = 0;
     }
 
-    final target = componentLists.get<Target>(entity);
+    final target = componentManager.getComponent<Target>(entity);
     if (target?.targetEntity == null || weapon.currentCooldown > 0) {
       return;
     }
@@ -342,7 +342,7 @@ class WeaponSystem extends EntitySystem {
     if (weapon.ammo == 0) return;
     if (weapon.ammo > 0) weapon.ammo--;
 
-    final position = componentLists.get<Position>(entity)!;
+    final position = componentManager.getComponent<Position>(entity)!;
     final targetPosition = world.getComponent<Position>(target!.targetEntity!);
     if (targetPosition == null) return;
 
@@ -361,7 +361,7 @@ class WeaponSystem extends EntitySystem {
         Damage(weapon.damage),
         Lifetime(800),
         BoundingBox(2, 2),
-        componentLists.get<Team>(entity)!.clone(),
+        componentManager.getComponent<Team>(entity)!.clone(),
       });
 
       weapon.currentCooldown = weapon.cooldownMs;
@@ -379,10 +379,10 @@ class AnimationSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final animation = componentLists.get<Animation>(entity)!;
+    final animation = componentManager.getComponent<Animation>(entity)!;
     animation.elapsedTime += delta.inMilliseconds / 1000.0;
 
     while (animation.elapsedTime >= animation.frameTime) {
@@ -411,11 +411,11 @@ class RenderingSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final position = componentLists.get<Position>(entity)!;
-    final sprite = componentLists.get<Sprite>(entity)!;
+    final position = componentManager.getComponent<Position>(entity)!;
+    final sprite = componentManager.getComponent<Sprite>(entity)!;
 
     _renderQueue.add(_RenderItem(
       entity: entity,

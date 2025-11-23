@@ -3,14 +3,8 @@ import 'package:dentity/dentity.dart';
 class EntityView implements Iterable<Entity> {
   final EntityManager _entityManager;
   final Archetype archetype;
-  final EntityComposition _componentArrays;
-  EntityComposition get componentLists => _componentArrays;
 
-  EntityView(this._entityManager, this.archetype)
-      : _componentArrays =
-            _entityManager.componentManager.componentsForArchetype(
-          archetype,
-        );
+  EntityView(this._entityManager, this.archetype);
 
   factory EntityView.fromTypes(
     EntityManager entityManager,
@@ -24,15 +18,18 @@ class EntityView implements Iterable<Entity> {
   Iterable<Entity> get _entities =>
       _entityManager.getEntitiesMatching(archetype);
 
-  @Deprecated('Use componentLists[type] directly instead')
-  SparseList<Component>? getComponentArray(Type type) => _componentArrays[type];
+  @Deprecated('Use componentManager.getComponentByType instead')
+  SparseList<Component>? getComponentArray(Type type) =>
+      _entityManager.componentManager.getComponentByType(type, 0) != null
+          ? null
+          : null;
 
-  @Deprecated('Use componentLists.get<T>(entity) instead')
+  @Deprecated('Use componentManager.getComponentByType instead')
   Component? getComponentForType(Type type, Entity entity) =>
-      _componentArrays[type]?[entity];
+      _entityManager.componentManager.getComponentByType(type, entity);
 
   T? getComponent<T extends Component>(Entity entity) =>
-      _componentArrays.get<T>(entity);
+      _entityManager.componentManager.getComponent<T>(entity);
 
   @override
   Iterator<Entity> get iterator => _entities.iterator;

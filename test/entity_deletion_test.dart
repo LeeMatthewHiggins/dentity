@@ -47,10 +47,10 @@ class DestructionSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final health = componentLists.get<Health>(entity);
+    final health = componentManager.getComponent<Health>(entity);
     if (health != null && health.hp <= 0) {
       destroyedEntities.add(entity);
       entityManager.destroyEntity(entity);
@@ -67,7 +67,7 @@ class CountingSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
     processedCount++;
@@ -83,10 +83,10 @@ class CascadingDestructionSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final tag = componentLists.get<Tag>(entity);
+    final tag = componentManager.getComponent<Tag>(entity);
     if (tag != null && tag.value == 'destroy_all') {
       final allEntities = entityManager.viewForTypes({Position}).toList();
       for (final otherEntity in allEntities) {

@@ -29,10 +29,10 @@ class SpawnerSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final tag = componentLists.get<SpawnTag>(entity);
+    final tag = componentManager.getComponent<SpawnTag>(entity);
     if (tag != null) {
       for (var i = 0; i < tag.count; i++) {
         final spawned = entityManager.createEntity({
@@ -53,7 +53,7 @@ class CountingSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
     processedCount++;

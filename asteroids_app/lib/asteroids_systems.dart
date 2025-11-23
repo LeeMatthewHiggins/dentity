@@ -30,11 +30,11 @@ class InputSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final input = componentLists.get<InputState>(entity)!;
-    final rotation = componentLists.get<Rotation>(entity)!;
+    final input = componentManager.getComponent<InputState>(entity)!;
+    final rotation = componentManager.getComponent<Rotation>(entity)!;
 
     if (input.rotateLeft) {
       rotation.angularVelocity = -_GameConstants.shipRotationSpeed;
@@ -53,13 +53,13 @@ class ThrustSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final input = componentLists.get<InputState>(entity)!;
-    final thrust = componentLists.get<ThrustForce>(entity)!;
-    final rotation = componentLists.get<Rotation>(entity)!;
-    final velocity = componentLists.get<Velocity>(entity)!;
+    final input = componentManager.getComponent<InputState>(entity)!;
+    final thrust = componentManager.getComponent<ThrustForce>(entity)!;
+    final rotation = componentManager.getComponent<Rotation>(entity)!;
+    final velocity = componentManager.getComponent<Velocity>(entity)!;
 
     if (input.thrust) {
       final deltaSeconds = delta.inMilliseconds / 1000.0;
@@ -85,10 +85,10 @@ class AsteroidsRotationSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final rotation = componentLists.get<Rotation>(entity)!;
+    final rotation = componentManager.getComponent<Rotation>(entity)!;
     rotation.angle += rotation.angularVelocity * delta.inMilliseconds / 1000.0;
 
     while (rotation.angle >= _twoPi) {
@@ -107,11 +107,11 @@ class BoundsWrappingSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final position = componentLists.get<Position>(entity)!;
-    final bounds = componentLists.get<Bounds>(entity)!;
+    final position = componentManager.getComponent<Position>(entity)!;
+    final bounds = componentManager.getComponent<Bounds>(entity)!;
 
     if (position.x < 0) {
       position.x += bounds.width;
@@ -146,7 +146,7 @@ class AsteroidsCollisionSystem extends EntitySystem {
         final entityA = entities[i];
         final entityB = entities[j];
 
-        if (_checkCollision(entityA, entityB, view.componentLists)) {
+        if (_checkCollision(entityA, entityB, view)) {
           _collisions.add(_CollisionPair(entityA, entityB));
         }
       }
@@ -157,9 +157,9 @@ class AsteroidsCollisionSystem extends EntitySystem {
     }
   }
 
-  bool _checkCollision(Entity a, Entity b, EntityComposition components) {
-    final posA = components.get<Position>(a)!;
-    final posB = components.get<Position>(b)!;
+  bool _checkCollision(Entity a, Entity b, EntityView view) {
+    final posA = view.getComponent<Position>(a)!;
+    final posB = view.getComponent<Position>(b)!;
 
     final radiusA = _getRadius(a);
     final radiusB = _getRadius(b);
@@ -220,7 +220,7 @@ class AsteroidsCollisionSystem extends EntitySystem {
     final shipView = world.viewForTypes({Ship, Score});
     if (shipView.isNotEmpty) {
       final shipEntity = shipView.first;
-      final score = shipView.componentLists.get<Score>(shipEntity);
+      final score = shipView.getComponent<Score>(shipEntity);
       if (score != null) {
         score.value += points;
       }
@@ -281,7 +281,7 @@ class AsteroidsCollisionSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
   }
@@ -303,24 +303,24 @@ class LaserSpawnSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
     if (_cooldownRemaining > 0) {
       _cooldownRemaining -= delta.inMilliseconds;
     }
 
-    final input = componentLists.get<InputState>(entity)!;
+    final input = componentManager.getComponent<InputState>(entity)!;
 
     if (input.fire && _cooldownRemaining <= 0) {
-      final position = componentLists.get<Position>(entity)!;
-      final rotation = componentLists.get<Rotation>(entity)!;
-      final bounds = componentLists.get<Bounds>(entity);
+      final position = componentManager.getComponent<Position>(entity)!;
+      final rotation = componentManager.getComponent<Rotation>(entity)!;
+      final bounds = componentManager.getComponent<Bounds>(entity);
 
       final laserVx = math.cos(rotation.angle) * _GameConstants.laserSpeed;
       final laserVy = math.sin(rotation.angle) * _GameConstants.laserSpeed;
 
-      final shipVelocity = componentLists.get<Velocity>(entity);
+      final shipVelocity = componentManager.getComponent<Velocity>(entity);
       final finalVx = laserVx + (shipVelocity?.x ?? 0);
       final finalVy = laserVy + (shipVelocity?.y ?? 0);
 
@@ -350,10 +350,10 @@ class AsteroidsLifetimeSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final lifetime = componentLists.get<Lifetime>(entity)!;
+    final lifetime = componentManager.getComponent<Lifetime>(entity)!;
     lifetime.remainingMs -= delta.inMilliseconds;
 
     if (lifetime.remainingMs <= 0) {
@@ -379,10 +379,10 @@ class ShieldRechargeSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final shield = componentLists.get<Shield>(entity)!;
+    final shield = componentManager.getComponent<Shield>(entity)!;
     if (shield.current < shield.maximum) {
       final deltaSeconds = delta.inMilliseconds / 1000.0;
       shield.current += _GameConstants.shieldRechargeRate * deltaSeconds;

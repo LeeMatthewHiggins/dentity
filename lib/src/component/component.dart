@@ -26,8 +26,6 @@ abstract class ComponentManagerReadOnlyInterface {
   bool hasComponent<T>(Entity entity);
   bool hasComponentByType(Entity entity, Type type);
   Iterable<T> getComponentsOfType<T extends Component>();
-  EntityComposition componentsForTypes(Iterable<Type> types);
-  EntityComposition componentsForArchetype(Archetype archetype);
 }
 
 abstract class ComponentManagerInterface
@@ -41,6 +39,8 @@ abstract class ComponentManagerInterface
 class ComponentManager
     implements ComponentManagerInterface, ComponentManagerListener {
   final Map<Type, SparseList<Component>> _componentArrays = {};
+  late final List<SparseList<Component>?> _indexedComponentArrays;
+  final Map<Type, int> _typeIndexCache = {};
   late final Map<Type, ComponentListFactory> _componentArrayFactories;
   late ArchetypeManagerInterface _archetypeManager;
   ArchetypeManagerInterface get archetypeManager => _archetypeManager;
@@ -53,36 +53,41 @@ class ComponentManager
   }) {
     _componentArrayFactories = componentArrayFactories;
     _archetypeManager = archetypeManagerFactory(_componentArrayFactories.keys);
+
+    final maxIndex = _componentArrayFactories.keys
+        .map((type) => _archetypeManager.getTypeIndex(type) ?? -1)
+        .fold<int>(-1, (max, index) => index > max ? index : max);
+
+    _indexedComponentArrays = List.filled(maxIndex + 1, null);
+
     for (var entry in _componentArrayFactories.entries) {
-      _componentArrays[entry.key] = entry.value();
+      final list = entry.value();
+      _componentArrays[entry.key] = list;
+      final index = _archetypeManager.getTypeIndex(entry.key);
+      if (index != null) {
+        _indexedComponentArrays[index] = list;
+        _typeIndexCache[entry.key] = index;
+      }
     }
   }
 
-  SparseList<Component>? _getComponentArray(Type type) =>
-      _componentArrays[type];
-
-  @override
-  EntityComposition componentsForTypes(Iterable<Type> types) {
-    final entries =
-        _componentArrays.entries.where((entry) => types.contains(entry.key));
-    return EntityComposition(Map.fromEntries(entries));
+  @pragma('vm:prefer-inline')
+  SparseList<Component>? _getComponentArray(Type type) {
+    final index = _archetypeManager.getTypeIndex(type);
+    if (index != null && index < _indexedComponentArrays.length) {
+      return _indexedComponentArrays[index];
+    }
+    return _componentArrays[type];
   }
 
-  @override
-  EntityComposition componentsForArchetype(
-    Archetype archetype,
-  ) {
-    final types = _archetypeManager.getComponentTypes(archetype);
-    return componentsForTypes(types);
-  }
-
+  @pragma('vm:prefer-inline')
   @override
   T? getComponent<T extends Component>(Entity entity) {
-    final component = getComponentByType(T, entity);
-    if (component is T) {
-      return component;
+    final index = _typeIndexCache[T];
+    if (index != null) {
+      return _indexedComponentArrays[index]?[entity] as T?;
     }
-    return null;
+    return _componentArrays[T]?[entity] as T?;
   }
 
   @override
@@ -205,95 +210,4 @@ class ComponentManager
       );
     }
   }
-}
-
-class EntityComposition implements Map<Type, SparseList<Component>> {
-  final Map<Type, SparseList<Component>> _map;
-
-  EntityComposition(this._map);
-
-  @pragma('vm:prefer-inline')
-  T? get<T extends Component>(Entity entity) => _map[T]?[entity] as T?;
-
-  @pragma('vm:prefer-inline')
-  SparseList<Component>? listFor<T extends Component>() => _map[T];
-
-  @Deprecated('Use get<T>(entity) instead of [Type]?[entity] as T?')
-  SparseList<Component>? getComponentList(Type type) => _map[type];
-
-  @override
-  SparseList<Component>? operator [](Object? key) => _map[key];
-
-  @override
-  void operator []=(Type key, SparseList<Component> value) => _map[key] = value;
-
-  @override
-  void clear() => _map.clear();
-
-  @override
-  Iterable<Type> get keys => _map.keys;
-
-  @override
-  SparseList<Component>? remove(Object? key) => _map.remove(key);
-
-  @override
-  Iterable<SparseList<Component>> get values => _map.values;
-
-  @override
-  void addAll(Map<Type, SparseList<Component>> other) => _map.addAll(other);
-
-  @override
-  void addEntries(Iterable<MapEntry<Type, SparseList<Component>>> newEntries) =>
-      _map.addEntries(newEntries);
-
-  @override
-  Map<RK, RV> cast<RK, RV>() => _map.cast<RK, RV>();
-
-  @override
-  bool containsKey(Object? key) => _map.containsKey(key);
-
-  @override
-  bool containsValue(Object? value) => _map.containsValue(value);
-
-  @override
-  Iterable<MapEntry<Type, SparseList<Component>>> get entries => _map.entries;
-
-  @override
-  void forEach(void Function(Type key, SparseList<Component> value) action) =>
-      _map.forEach(action);
-
-  @override
-  bool get isEmpty => _map.isEmpty;
-
-  @override
-  bool get isNotEmpty => _map.isNotEmpty;
-
-  @override
-  int get length => _map.length;
-
-  @override
-  Map<K2, V2> map<K2, V2>(
-          MapEntry<K2, V2> Function(Type key, SparseList<Component> value)
-              convert) =>
-      _map.map(convert);
-
-  @override
-  SparseList<Component> putIfAbsent(
-          Type key, SparseList<Component> Function() ifAbsent) =>
-      _map.putIfAbsent(key, ifAbsent);
-
-  @override
-  void removeWhere(bool Function(Type key, SparseList<Component> value) test) =>
-      _map.removeWhere(test);
-
-  @override
-  SparseList<Component> update(Type key,
-          SparseList<Component> Function(SparseList<Component> value) update,
-          {SparseList<Component> Function()? ifAbsent}) =>
-      _map.update(key, update, ifAbsent: ifAbsent);
-
-  @override
-  void updateAll(SparseList<Component> Function(
-          Type key, SparseList<Component> value)
-      update) => _map.updateAll(update);
 }

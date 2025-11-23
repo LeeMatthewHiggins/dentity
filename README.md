@@ -20,8 +20,12 @@ Add the following to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  dentity: ^1.8.0
+  dentity: ^1.9.0
 ```
+
+### Upgrading from 1.8.x
+
+Version 1.9.0 includes breaking changes for performance improvements. See the [Migration Guide](#migration-from-18x-to-19x) below.
 
 Then, run the following command to install the package:
 
@@ -379,6 +383,97 @@ print(world.entityManager.viewCacheSize);
 - Zero performance overhead - views are reused across systems
 - Reduced memory allocations in hot paths
 - Consistent view instances throughout the frame
+
+## Migration from 1.8.x to 1.9.x
+
+Version 1.9.0 includes major performance improvements (2-3x faster component access) but requires updating custom EntitySystem implementations.
+
+### What Changed
+
+**EntityComposition class removed** - The intermediate `EntityComposition` abstraction has been removed. Systems now access components directly through `ComponentManager` for better performance.
+
+**EntitySystem.processEntity signature** - The second parameter changed from `EntityComposition` to `ComponentManagerReadOnlyInterface`.
+
+### Migration Steps
+
+**1. Update EntitySystem implementations:**
+
+**Before (v1.8):**
+```dart
+class MovementSystem extends EntitySystem {
+  @override
+  void processEntity(
+    Entity entity,
+    EntityComposition componentLists,
+    Duration delta,
+  ) {
+    final position = componentLists.get<Position>(entity)!;
+    final velocity = componentLists.get<Velocity>(entity)!;
+    position.x += velocity.x * delta.inMilliseconds / 1000.0;
+    position.y += velocity.y * delta.inMilliseconds / 1000.0;
+  }
+}
+```
+
+**After (v1.9):**
+```dart
+class MovementSystem extends EntitySystem {
+  @override
+  void processEntity(
+    Entity entity,
+    ComponentManagerReadOnlyInterface componentManager,
+    Duration delta,
+  ) {
+    final position = componentManager.getComponent<Position>(entity)!;
+    final velocity = componentManager.getComponent<Velocity>(entity)!;
+    position.x += velocity.x * delta.inMilliseconds / 1000.0;
+    position.y += velocity.y * delta.inMilliseconds / 1000.0;
+  }
+}
+```
+
+**2. Update EntityView usage in collision/targeting systems:**
+
+**Before (v1.8):**
+```dart
+bool checkCollision(Entity a, Entity b, EntityView view) {
+  final posA = view.componentLists.get<Position>(a)!;
+  final posB = view.componentLists.get<Position>(b)!;
+  // collision logic...
+}
+```
+
+**After (v1.9):**
+```dart
+bool checkCollision(Entity a, Entity b, EntityView view) {
+  final posA = view.getComponent<Position>(a)!;
+  final posB = view.getComponent<Position>(b)!;
+  // collision logic...
+}
+```
+
+### Quick Find & Replace
+
+For most codebases, these regex replacements will handle the migration:
+
+1. In EntitySystem classes:
+   - Find: `EntityComposition componentLists`
+   - Replace: `ComponentManagerReadOnlyInterface componentManager`
+
+2. In processEntity methods:
+   - Find: `componentLists\.get<`
+   - Replace: `componentManager.getComponent<`
+
+3. In EntityView usage:
+   - Find: `view\.componentLists\.get<`
+   - Replace: `view.getComponent<`
+
+### Performance Benefits
+
+After migration, you'll see:
+- 2-3x faster component access in hot paths
+- Reduced memory allocations (no EntityComposition copies)
+- Better cache locality with list-based indexing
 
 ## Migration Guide (v1.5 → v1.6)
 

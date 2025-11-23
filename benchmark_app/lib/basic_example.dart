@@ -187,11 +187,11 @@ class MovementSystem extends EntitySystem {
   @override
   void processEntity(
     Entity entity,
-    EntityComposition componentLists,
+    ComponentManagerReadOnlyInterface componentManager,
     Duration delta,
   ) {
-    final position = componentLists.get<Position>(entity)!;
-    final velocity = componentLists.get<Velocity>(entity)!;
+    final position = componentManager.getComponent<Position>(entity)!;
+    final velocity = componentManager.getComponent<Velocity>(entity)!;
     position.x += velocity.x;
     position.y += velocity.y;
   }

@@ -1,12 +1,19 @@
+import 'dart:collection';
+
 import 'package:dentity/dentity.dart';
 
 class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
-  final Map<Type, int> _componentTypeToBitIndex = {};
+  final HashMap<Type, int> _componentTypeToBitIndex;
+  final List<Type> _bitIndexToComponentType;
 
-  ArchetypeManagerBigInt(Iterable<Type> types) {
-    var bitIndex = 0;
-    for (var componentType in types) {
-      _componentTypeToBitIndex[componentType] = bitIndex++;
+  ArchetypeManagerBigInt(Iterable<Type> types)
+      : _componentTypeToBitIndex = HashMap(
+          equals: identical,
+          hashCode: identityHashCode,
+        ),
+        _bitIndexToComponentType = List.unmodifiable(types) {
+    for (var bitIndex = 0; bitIndex < _bitIndexToComponentType.length; bitIndex++) {
+      _componentTypeToBitIndex[_bitIndexToComponentType[bitIndex]] = bitIndex;
     }
   }
 
@@ -26,11 +33,9 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
   Iterable<Type> getComponentTypes(Archetype archetype) {
     final archetypeBigInt = archetype as BigInt;
     final componentTypes = <Type>[];
-    for (var componentType in _componentTypeToBitIndex.keys) {
-      var bitIndex = _componentTypeToBitIndex[componentType];
-      if (bitIndex != null &&
-          (archetypeBigInt & (BigInt.one << bitIndex)) != BigInt.zero) {
-        componentTypes.add(componentType);
+    for (var bitIndex = 0; bitIndex < _bitIndexToComponentType.length; bitIndex++) {
+      if ((archetypeBigInt & (BigInt.one << bitIndex)) != BigInt.zero) {
+        componentTypes.add(_bitIndexToComponentType[bitIndex]);
       }
     }
     return componentTypes;
@@ -51,4 +56,7 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
     final archetype = getArchetype(componentTypes);
     return archetype == getArchetype(componentTypes);
   }
+
+  @override
+  int? getTypeIndex(Type type) => _componentTypeToBitIndex[type];
 }
