@@ -91,6 +91,7 @@ class EntityManager implements EntityManagerListener {
     return createEntity(components);
   }
 
+  @pragma('vm:prefer-inline')
   bool hasEntity(Entity entity) => _entityByArchetype.containsKey(entity);
 
   void destroyEntity(Entity entity) {
@@ -140,6 +141,7 @@ class EntityManager implements EntityManagerListener {
     _updateEntityArchetype(entity, newArchetype);
   }
 
+  @pragma('vm:prefer-inline')
   Archetype? getArchetype(Entity entity) => _entityByArchetype[entity];
 
   Iterable<Entity> getEntitiesWithComponents(Set<Type> types) {

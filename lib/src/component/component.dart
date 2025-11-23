@@ -98,6 +98,7 @@ class ComponentManager
     }
   }
 
+  @pragma('vm:prefer-inline')
   @override
   Component? getComponentByType(Type componentType, Entity entity) =>
       _getComponentArray(componentType)?[entity];
@@ -114,10 +115,12 @@ class ComponentManager
   @override
   Iterable<Type> get componentTypes => _componentArrays.keys;
 
+  @pragma('vm:prefer-inline')
   @override
   bool hasComponentByType(Entity entity, Type type) =>
       _getComponentArray(type)?[entity] != null;
 
+  @pragma('vm:prefer-inline')
   @override
   bool hasComponent<T>(Entity entity) => hasComponentByType(entity, T);
 

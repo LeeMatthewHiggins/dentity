@@ -41,11 +41,13 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
     return componentTypes;
   }
 
+  @pragma('vm:prefer-inline')
   @override
   bool isSubtype(Archetype a, Archetype b) {
     return (a as BigInt) & (b as BigInt) == b;
   }
 
+  @pragma('vm:prefer-inline')
   @override
   bool isSupertype(Archetype a, Archetype b) {
     return (a as BigInt) & (b as BigInt) == a;
@@ -57,6 +59,7 @@ class ArchetypeManagerBigInt implements ArchetypeManagerInterface {
     return archetype == getArchetype(componentTypes);
   }
 
+  @pragma('vm:prefer-inline')
   @override
   int? getTypeIndex(Type type) => _componentTypeToBitIndex[type];
 }

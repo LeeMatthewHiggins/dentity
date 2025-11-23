@@ -7,8 +7,7 @@ import 'realistic_scenarios.dart';
 import 'benchmark_results_store.dart';
 import 'benchmark_comparison.dart';
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html show Blob, Url, AnchorElement;
+import 'web_utils.dart' if (dart.library.io) 'web_utils_stub.dart';
 
 EnhancedBenchmarkResult _runSpaceShooter(Map<String, int> params) {
   return RealisticScenarios.spaceShooter(
@@ -73,6 +72,7 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
   final int _totalBenchmarks = 4;
   BenchmarkBaseline? _baseline;
   BenchmarkComparison? _comparison;
+  bool _useIsolate = true;
 
   @override
   void initState() {
@@ -104,10 +104,10 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
     if (_results.isEmpty) return;
 
     try {
-      if (kIsWeb) {
-        final jsonString = BenchmarkResultsStore.getBaselineJson(_results);
-        _downloadFileWeb(jsonString, 'benchmark_baseline.json');
+      final jsonString = BenchmarkResultsStore.getBaselineJson(_results);
 
+      if (kIsWeb) {
+        downloadFile(jsonString, 'benchmark_baseline.json');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Baseline downloaded')),
@@ -139,18 +139,6 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
         );
       }
     }
-  }
-
-  void _downloadFileWeb(String content, String filename) {
-    if (!kIsWeb) return;
-
-    final bytes = utf8.encode(content);
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute('download', filename)
-      ..click();
-    html.Url.revokeObjectUrl(url);
   }
 
   Future<void> _loadBaselineFromFile() async {
@@ -293,9 +281,14 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
       _currentBenchmark = name;
     });
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    await Future.delayed(const Duration(milliseconds: 100));
 
-    final result = await compute(benchmarkFn, params);
+    final EnhancedBenchmarkResult result;
+    if (_useIsolate) {
+      result = await compute(benchmarkFn, params);
+    } else {
+      result = benchmarkFn(params);
+    }
 
     setState(() {
       _results.add(result);
@@ -337,12 +330,28 @@ class BenchmarkScreenState extends State<BenchmarkScreen> {
                         const SizedBox(height: 8),
                         const Text('Testing with production-quality systems and realistic game scenarios'),
                         const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _isRunning ? null : _runAllBenchmarks,
-                          icon: _isRunning
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.play_arrow),
-                          label: Text(_isRunning ? 'Running Benchmarks...' : 'Run All Benchmarks'),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: _isRunning ? null : _runAllBenchmarks,
+                                icon: _isRunning
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Icon(Icons.play_arrow),
+                                label: Text(_isRunning ? 'Running Benchmarks...' : 'Run All Benchmarks'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            FilterChip(
+                              label: const Text('Use Isolate'),
+                              selected: _useIsolate,
+                              onSelected: _isRunning ? null : (value) {
+                                setState(() {
+                                  _useIsolate = value;
+                                });
+                              },
+                            ),
+                          ],
                         ),
                         if (_isRunning) ...[
                           const SizedBox(height: 16),

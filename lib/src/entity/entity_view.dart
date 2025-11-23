@@ -28,6 +28,7 @@ class EntityView implements Iterable<Entity> {
   Component? getComponentForType(Type type, Entity entity) =>
       _entityManager.componentManager.getComponentByType(type, entity);
 
+  @pragma('vm:prefer-inline')
   T? getComponent<T extends Component>(Entity entity) =>
       _entityManager.componentManager.getComponent<T>(entity);
 
