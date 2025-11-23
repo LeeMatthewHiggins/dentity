@@ -177,6 +177,10 @@ class OtherComponent extends Component {
 
 class MovementSystem extends EntitySystem {
   MovementSystem();
+
+  @override
+  String get name => 'MovementSystem';
+
   @override
   Set<Type> get filterTypes => const {Position, Velocity};
 

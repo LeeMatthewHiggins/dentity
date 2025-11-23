@@ -7,6 +7,9 @@ class PhysicsSystem extends EntitySystem {
   static const _dragCoefficient = 0.99;
 
   @override
+  String get name => 'PhysicsSystem';
+
+  @override
   Set<Type> get filterTypes => const {Position, Velocity};
 
   @override
@@ -36,6 +39,9 @@ class RotationSystem extends EntitySystem {
   static const _twoPi = 2 * math.pi;
 
   @override
+  String get name => 'RotationSystem';
+
+  @override
   Set<Type> get filterTypes => const {Rotation};
 
   @override
@@ -58,6 +64,9 @@ class RotationSystem extends EntitySystem {
 
 class LifetimeSystem extends EntitySystem {
   final List<Entity> _entitiesToDestroy = [];
+
+  @override
+  String get name => 'LifetimeSystem';
 
   @override
   Set<Type> get filterTypes => const {Lifetime};
@@ -90,6 +99,9 @@ class LifetimeSystem extends EntitySystem {
 class SimplifiedCollisionSystem extends EntitySystem {
   static const _gridSize = 100.0;
   final Map<_GridCell, List<Entity>> _grid = {};
+
+  @override
+  String get name => 'SimplifiedCollisionSystem';
 
   @override
   Set<Type> get filterTypes => const {Position, BoundingBox, Team};
@@ -167,6 +179,9 @@ class DamageSystem extends EntitySystem {
   final List<Entity> _entitiesToKill = [];
 
   @override
+  String get name => 'DamageSystem';
+
+  @override
   Set<Type> get filterTypes => const {Health, Damage};
 
   @override
@@ -199,6 +214,9 @@ class DamageSystem extends EntitySystem {
 
 class HealthRegenerationSystem extends EntitySystem {
   @override
+  String get name => 'HealthRegenerationSystem';
+
+  @override
   Set<Type> get filterTypes => const {Health};
 
   @override
@@ -222,6 +240,9 @@ class TargetingSystem extends EntitySystem {
   static const _maxTargetRangeSquared = _maxTargetRange * _maxTargetRange;
   static const _gridSize = 500.0;
   final Map<_GridCell, List<Entity>> _grid = {};
+
+  @override
+  String get name => 'TargetingSystem';
 
   @override
   Set<Type> get filterTypes => const {Position, Team};
@@ -295,6 +316,9 @@ class TargetingSystem extends EntitySystem {
 
 class WeaponSystem extends EntitySystem {
   @override
+  String get name => 'WeaponSystem';
+
+  @override
   Set<Type> get filterTypes => const {Position, Weapon, Target, Team};
 
   @override
@@ -347,6 +371,9 @@ class WeaponSystem extends EntitySystem {
 
 class AnimationSystem extends EntitySystem {
   @override
+  String get name => 'AnimationSystem';
+
+  @override
   Set<Type> get filterTypes => const {Animation};
 
   @override
@@ -367,6 +394,9 @@ class AnimationSystem extends EntitySystem {
 
 class RenderingSystem extends EntitySystem {
   final List<_RenderItem> _renderQueue = [];
+
+  @override
+  String get name => 'RenderingSystem';
 
   @override
   Set<Type> get filterTypes => const {Position, Sprite};

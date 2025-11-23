@@ -212,8 +212,10 @@ class EntityComposition implements Map<Type, SparseList<Component>> {
 
   EntityComposition(this._map);
 
+  @pragma('vm:prefer-inline')
   T? get<T extends Component>(Entity entity) => _map[T]?[entity] as T?;
 
+  @pragma('vm:prefer-inline')
   SparseList<Component>? listFor<T extends Component>() => _map[T];
 
   @Deprecated('Use get<T>(entity) instead of [Type]?[entity] as T?')

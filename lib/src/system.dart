@@ -7,6 +7,8 @@ abstract class System {
 
   World get world => _world!;
 
+  String get name => runtimeType.toString();
+
   @Deprecated('Use attachWorld instead')
   void attach(EntityManager entityManager) {
     componentManager = entityManager.componentManager;

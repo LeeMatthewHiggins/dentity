@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../enhanced_benchmark_result.dart';
+import '../benchmark_comparison.dart';
 
 class SummaryDashboard extends StatelessWidget {
   final List<EnhancedBenchmarkResult> results;
@@ -241,37 +242,101 @@ class SystemPerformanceBreakdown extends StatelessWidget {
     final sortedSystems = result.systemBreakdown.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
+    final totalMicros = result.duration.inMicroseconds.toDouble();
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+      Colors.teal,
+      Colors.amber,
+      Colors.indigo,
+      Colors.pink,
+      Colors.cyan,
+    ];
+
+    final sections = sortedSystems.asMap().entries.map((entry) {
+      final index = entry.key;
+      final system = entry.value;
+      final percentage = (system.value.inMicroseconds / totalMicros * 100);
+
+      return PieChartSectionData(
+        value: percentage,
+        title: '${percentage.toStringAsFixed(1)}%',
+        color: colors[index % colors.length],
+        radius: 80,
+        titleStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      );
+    }).toList();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${result.name} - System Performance Breakdown', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            ...sortedSystems.map((entry) {
-              final percentage = (entry.value.inMicroseconds / result.duration.inMicroseconds * 100);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(entry.key),
-                        Text('${entry.value.inMilliseconds}ms (${percentage.toStringAsFixed(1)}%)'),
-                      ],
+            Text('${result.name} - System Performance Breakdown',
+              style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: SizedBox(
+                    height: 200,
+                    child: PieChart(
+                      PieChartData(
+                        sections: sections,
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 0,
+                        borderData: FlBorderData(show: false),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: percentage / 100,
-                      minHeight: 8,
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            }),
+                const SizedBox(width: 24),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: sortedSystems.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final system = entry.value;
+                      final percentage = (system.value.inMicroseconds / totalMicros * 100);
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: colors[index % colors.length],
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(system.key),
+                            ),
+                            Text(
+                              '${system.value.inMilliseconds}ms (${percentage.toStringAsFixed(1)}%)',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -488,5 +553,217 @@ class EntityLifecycleChart extends StatelessWidget {
     if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
     if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
     return value.toString();
+  }
+}
+
+class PerformanceComparisonChart extends StatelessWidget {
+  final BenchmarkComparison comparison;
+
+  const PerformanceComparisonChart({super.key, required this.comparison});
+
+  @override
+  Widget build(BuildContext context) {
+    if (comparison.deltas.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final sortedDeltas = List<BenchmarkDelta>.from(comparison.deltas)
+      ..sort((a, b) => a.percentChange.compareTo(b.percentChange));
+
+    return Card(
+      color: comparison.hasSignificantRegressions
+          ? Colors.red.shade900.withValues(alpha: 0.3)
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Performance Comparison',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'vs baseline from ${_formatDate(comparison.baseline.systemInfo.timestamp)} (${comparison.baseline.systemInfo.platform})',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (!comparison.isCompatible) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade900.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, size: 16, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        comparison.incompatibilityReason ?? 'Platform mismatch',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 300,
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: sortedDeltas.map((d) => d.percentChange.abs()).reduce((a, b) => a > b ? a : b) * 1.2,
+                  minY: -sortedDeltas.map((d) => d.percentChange.abs()).reduce((a, b) => a > b ? a : b) * 1.2,
+                  barTouchData: BarTouchData(
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        final delta = sortedDeltas[groupIndex];
+                        return BarTooltipItem(
+                          '${delta.benchmarkName}\n',
+                          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          children: [
+                            TextSpan(
+                              text: '${delta.percentChange.toStringAsFixed(1)}% ${delta.isRegression ? 'slower' : 'faster'}\n',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            TextSpan(
+                              text: '${delta.baselineDurationMs}ms → ${delta.currentDurationMs}ms',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          if (value.toInt() >= 0 && value.toInt() < sortedDeltas.length) {
+                            final name = sortedDeltas[value.toInt()].benchmarkName;
+                            final shortName = name.length > 15 ? '${name.substring(0, 12)}...' : name;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                shortName,
+                                style: const TextStyle(fontSize: 10),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                        reservedSize: 40,
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          return Text('${value.toInt()}%', style: const TextStyle(fontSize: 10));
+                        },
+                        reservedSize: 40,
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  gridData: FlGridData(
+                    show: true,
+                    drawHorizontalLine: true,
+                    horizontalInterval: 5,
+                    getDrawingHorizontalLine: (value) {
+                      if (value == 0) {
+                        return const FlLine(color: Colors.white, strokeWidth: 2);
+                      }
+                      return FlLine(color: Colors.white.withValues(alpha: 0.1), strokeWidth: 1);
+                    },
+                  ),
+                  borderData: FlBorderData(show: false),
+                  barGroups: sortedDeltas.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final delta = entry.value;
+                    final isRegression = delta.isRegression;
+                    final isSignificant = delta.percentChange.abs() > 5.0;
+
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: delta.percentChange,
+                          color: isRegression
+                              ? (isSignificant ? Colors.red : Colors.orange)
+                              : (isSignificant ? Colors.green : Colors.lightGreen),
+                          width: 20,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _LegendItem(Colors.green, 'Significant improvement (>5%)'),
+                _LegendItem(Colors.lightGreen, 'Minor improvement (1-5%)'),
+                _LegendItem(Colors.orange, 'Minor regression (1-5%)'),
+                _LegendItem(Colors.red, 'Significant regression (>5%)'),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(String isoDate) {
+    try {
+      final date = DateTime.parse(isoDate);
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return isoDate;
+    }
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem(this.color, this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
   }
 }

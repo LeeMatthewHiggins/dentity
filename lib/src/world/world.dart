@@ -38,7 +38,7 @@ class World {
     for (var system in _systems) {
       if (stats != null) {
         final systemStats =
-            stats!.getOrCreateSystemStats(system.runtimeType.toString());
+            stats!.getOrCreateSystemStats(system.name);
         final stopwatch = Stopwatch()..start();
         final entitiesBefore = _entityManager.entities.length;
 
